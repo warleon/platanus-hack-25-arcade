@@ -12,22 +12,18 @@ const config = {
 const game = new Phaser.Game(config);
 
 // Game variables
-let snake = [];
-let snakeSize = 15;
-let direction = { x: 1, y: 0 };
-let nextDirection = { x: 1, y: 0 };
-let food;
-let score = 0;
-let scoreText;
-let titleBlocks = [];
 let gameOver = false;
-let moveTimer = 0;
-let moveDelay = 150;
 let graphics;
+const resources = [];
 
 function create() {
   const scene = this;
   graphics = this.add.graphics();
+
+  for (let i = 0; i < 3; i++) {
+    resources.push({ x: 0.1, y: i * 0.25 + 0.25 });
+    resources.push({ x: 0.9, y: i * 0.25 + 0.25 });
+  }
 
   // Keyboard input
   this.input.keyboard.on("keydown", onInput);
@@ -40,12 +36,16 @@ function onInput(event) {}
 function update(_time, delta) {
   if (gameOver) return;
   endGame(this);
-
   drawGame();
 }
 
 function drawGame() {
   graphics.clear();
+
+  const colors = [0x00ff00, 0x0000ff, 0xffff00];
+  resources.forEach((res, index) => {
+    drawSquare(res.x, res.y, 0.1, colors[index % colors.length]);
+  });
 }
 
 function endGame(scene) {
@@ -75,4 +75,10 @@ function playTone(scene, frequency, duration) {
 
   oscillator.start(audioContext.currentTime);
   oscillator.stop(audioContext.currentTime + duration);
+}
+
+function drawSquare(x, y, size, color) {
+  graphics.fillStyle(color, 1);
+  const w = size * config.width;
+  graphics.fillRect(x * config.width - w / 2, y * config.height - w / 2, w, w);
 }
