@@ -9,7 +9,7 @@ const config = {
     create: create,
     update: update,
   },
-  phisics: {
+  physics: {
     default: "arcade",
     arcade: { debug: true },
   },
@@ -48,6 +48,7 @@ function create() {
   // Keyboard input
   this.input.keyboard.on("keydown", onInput);
 
+  // Animations
   scene.anims.create({
     key: IDLE,
     frames: scene.anims.generateFrameNumbers("test", { start: 0, end: 0 }),
@@ -73,10 +74,9 @@ function create() {
     repeat: -1,
   });
 
-  scene.add
-    .sprite(config.width / 2, config.height / 2, "test")
-    .play("idle")
-    .setScale(8);
+  // Entities
+  const player = new Entity(scene, config.width / 2, config.height / 2, "test");
+  player.walkTo(0.7, 0.7);
 
   playTone(this, 440, 0.1);
 }
@@ -135,4 +135,30 @@ function drawRect(color, x, y, width, height = null) {
   const w = width * config.width;
   const h = height * config.width;
   graphics.fillRect(x * config.width - w / 2, y * config.height - h / 2, w, h);
+}
+
+class Entity extends Phaser.GameObjects.Sprite {
+  constructor(scene, x, y, texture, frame) {
+    super(scene, x, y, texture, frame);
+    this.scene = scene;
+    console.log(scene);
+    scene.add.existing(this);
+    scene.physics.add.existing(this, 0);
+  }
+
+  disappear() {
+    this.setActive(false);
+    this.setVisible(false);
+  }
+
+  appear() {
+    this.setActive(true);
+    this.setVisible(true);
+  }
+
+  walkTo(x, y) {
+    this.appear();
+    this.play(WALK);
+    this.scene.physics.moveTo(this, x * config.width, y * config.height, 8 * 8);
+  }
 }
