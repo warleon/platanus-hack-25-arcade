@@ -115,7 +115,7 @@ function create() {
   base2.resize(0.4, 0.2);
   resources.forEach((res, index) => {
     const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
-    resource.resize(res.size, res.size);
+    resource.resize(res.size);
   });
 
   const enemy = new Entity(
@@ -194,7 +194,6 @@ class Entity extends Phaser.GameObjects.Sprite {
   pathTargets = [];
   attackTargets = [];
   currentTarget = null;
-  targetBy = null;
   kind = ""; // path, hero, enemy, resource, base, ui
   attackRadius = 0.02;
   xpRadius = 0.1;
@@ -218,10 +217,12 @@ class Entity extends Phaser.GameObjects.Sprite {
     entities.push(this);
   }
   resize(w, h) {
-    this.setScale(
-      (config.width * w) / this.body.width,
-      (config.height * h) / this.body.height
-    );
+    const width = (config.width * w) / this.body.width;
+    let height = (config.height * h) / this.body.height;
+    if (h === undefined) {
+      height = width;
+    }
+    this.setScale(width, height);
   }
   distanceTo(entity) {
     return (
@@ -234,27 +235,21 @@ class Entity extends Phaser.GameObjects.Sprite {
     if (entity.kind !== PATH) {
       this.attackTargets.push(entity);
       this.currentTarget = this.attackTargets[0];
-      this.currentTarget.targetBy = this;
       return;
     }
     this.pathTargets.push(entity);
     if (!this.currentTarget) {
       this.currentTarget = this.pathTargets[0];
-      this.currentTarget.targetBy = this;
     }
   }
   popTarget() {
     if (this.currentTarget) {
-      this.currentTarget.targetBy = null;
       if (this.currentTarget.kind !== PATH) {
         this.attackTargets.shift();
         this.currentTarget = this.attackTargets[0];
       } else {
         this.pathTargets.shift();
         this.currentTarget = this.pathTargets[0];
-      }
-      if (this.currentTarget) {
-        this.currentTarget.targetBy = this;
       }
     }
     if (!this.currentTarget) {
@@ -317,7 +312,11 @@ class Entity extends Phaser.GameObjects.Sprite {
     if (this.currentTarget) {
       const distance = this.distanceTo(this.currentTarget);
       if (distance < this.attackRadius + this.currentTarget.hitboxRadius) {
-        this.attack();
+        if (this.currentTarget.kind === PATH) {
+          this.popTarget();
+        } else {
+          this.attack();
+        }
       } else {
         this.walkTo(this.currentTarget);
       }
@@ -331,7 +330,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       if (distance > this.visionRadius) continue;
       switch (this.kind) {
         case CREEP:
-          if (entity.kind === RESOURCE && !entity.targetBy) {
+          if (entity.kind === RESOURCE) {
             this.appendTarget(entity);
           }
           break;
