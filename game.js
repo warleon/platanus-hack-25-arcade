@@ -206,6 +206,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   manaRegeneration = 0;
   speed = 40;
   level = 1;
+  attackable = true;
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -232,6 +233,9 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   appendTarget(entity) {
+    if (entity.attackable === false) {
+      return;
+    }
     if (entity.kind !== PATH) {
       this.attackTargets.push(entity);
       this.currentTarget = this.attackTargets[0];
@@ -302,9 +306,10 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.appear();
     this.play(DIE);
     this.body.setVelocity(0, 0);
+    this.attackable = false;
     setTimeout(() => {
       this.disappear();
-    }, 2000);
+    }, 1000);
   }
 
   update(_time, delta) {
