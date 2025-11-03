@@ -58,7 +58,10 @@ function preload() {
     frameHeight: 16,
   });
 
-  this.load.image("castle", Castle);
+  this.load.image("castle", Castle, {
+    frameWidth: 128,
+    frameHeight: 128,
+  });
 }
 function create() {
   const scene = this;
@@ -66,7 +69,6 @@ function create() {
 
   for (let i = 0; i < 2; i++) {
     resources.push({ x: 0.1, y: i * 0.33 + 0.33, size: 0.05 });
-
     resources.push({ x: 0.9, y: i * 0.33 + 0.33, size: 0.05 });
   }
 
@@ -100,19 +102,30 @@ function create() {
   });
 
   // Entities
-  const base = new Entity(scene, 0.2, 0.12, "castle");
-  base.setScale(1.2, 0.5);
+  const base1 = new Entity(scene, 0.2, 0.1, "base", "castle");
+  base1.resize(0.4, 0.2);
+  const base2 = new Entity(scene, 0.8, 0.9, "base", "castle");
+  base2.resize(0.4, 0.2);
+  resources.forEach((res, index) => {
+    const resource = new Entity(scene, res.x, res.y, "resource", "test");
+    resource.resize(res.size, res.size);
+  });
 
-  const enemy = new Entity(scene, pathPoints[0].x, pathPoints[0].y, "test");
+  const enemy = new Entity(
+    scene,
+    pathPoints[0].x,
+    pathPoints[0].y,
+    "enemy",
+    "test"
+  );
   const enemiesPath = pathPoints.map((point) => {
-    const p = new Entity(scene, point.x, point.y, "test");
-    p.idle();
+    const p = new Entity(scene, point.x, point.y, "path", "test");
+    p.disappear();
     return p;
   });
   for (const target of enemiesPath) {
     enemy.appendTarget(target);
   }
-  entities.push(enemy);
 
   playTone(this, 440, 0.1);
 }
@@ -130,15 +143,9 @@ function drawGame() {
   graphics.clear();
 
   const colors = [0x00ff00, 0x0000ff, 0xffff00];
-  resources.forEach((res, index) => {
-    drawRect(colors[index % colors.length], res.x, res.y, res.size);
-  });
   // UI
   drawRect(0xff0000, 0.2, 0.9, 0.4, 0.2);
   drawRect(0xff0000, 0.8, 0.1, 0.4, 0.2);
-  // bases
-  drawRect(0x00ff00, 0.2, 0.1, 0.4, 0.2);
-  drawRect(0x00ff00, 0.8, 0.9, 0.4, 0.2);
 }
 
 function restartGame(scene) {
@@ -179,13 +186,22 @@ function drawRect(color, x, y, width, height = null) {
 class Entity extends Phaser.GameObjects.Sprite {
   targets = [];
   currentTarget = null;
+  kind = ""; // path, hero, enemy, resource, base, ui
 
-  constructor(scene, x, y, texture, frame) {
-    super(scene, x * config.width, y * config.height, texture, frame);
+  constructor(scene, x, y, kind, texture) {
+    super(scene, x * config.width, y * config.height, texture);
     this.scene = scene;
-    console.log(scene);
     scene.add.existing(this);
     scene.physics.add.existing(this, 0);
+    this.kind = kind;
+    if (kind !== "base" && kind !== "ui") {
+      this.body.setCircle(this.body.halfWidth);
+    }
+
+    entities.forEach((entity) => {
+      scene.physics.add.overlap(this, entity);
+    });
+    entities.push(this);
   }
 
   appendTarget(entity) {
@@ -214,7 +230,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   walkTo(entity) {
     this.appear();
     this.play(WALK);
-    this.scene.physics.moveTo(this, entity.x, entity.y, 8 * 8);
+    this.scene.physics.moveTo(this, entity.x, entity.y, 40);
   }
 
   idle() {
@@ -246,12 +262,18 @@ class Entity extends Phaser.GameObjects.Sprite {
         this.currentTarget.x,
         this.currentTarget.y
       );
-      if (distance < 4) {
+      if (distance < 1) {
         this.idle();
         this.popTarget();
       } else {
         this.walkTo(this.currentTarget);
       }
     }
+  }
+  resize(w, h) {
+    this.setScale(
+      (config.width * w) / this.body.width,
+      (config.height * h) / this.body.height
+    );
   }
 }
