@@ -46,6 +46,13 @@ const IDLE = "idle";
 const WALK = "walk";
 const ATTACK = "attack";
 const DIE = "die";
+// entity kinds
+const PATH = "path";
+const HERO = "hero";
+const CREEP = "creep";
+const RESOURCE = "resource";
+const BASE = "base";
+const UI = "ui";
 // Game variables
 let graphics;
 const resources = [];
@@ -102,12 +109,12 @@ function create() {
   });
 
   // Entities
-  const base1 = new Entity(scene, 0.2, 0.1, "base", "castle");
+  const base1 = new Entity(scene, 0.2, 0.1, BASE, "castle");
   base1.resize(0.4, 0.2);
-  const base2 = new Entity(scene, 0.8, 0.9, "base", "castle");
+  const base2 = new Entity(scene, 0.8, 0.9, BASE, "castle");
   base2.resize(0.4, 0.2);
   resources.forEach((res, index) => {
-    const resource = new Entity(scene, res.x, res.y, "resource", "test");
+    const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
     resource.resize(res.size, res.size);
   });
 
@@ -115,11 +122,11 @@ function create() {
     scene,
     pathPoints[0].x,
     pathPoints[0].y,
-    "enemy",
+    CREEP,
     "test"
   );
   const enemiesPath = pathPoints.map((point) => {
-    const p = new Entity(scene, point.x, point.y, "path", "test");
+    const p = new Entity(scene, point.x, point.y, PATH, "test");
     p.disappear();
     return p;
   });
@@ -184,9 +191,22 @@ function drawRect(color, x, y, width, height = null) {
 }
 
 class Entity extends Phaser.GameObjects.Sprite {
-  targets = [];
+  pathTargets = [];
+  attackTargets = [];
   currentTarget = null;
+  targetBy = null;
   kind = ""; // path, hero, enemy, resource, base, ui
+  attackRadius = 0.02;
+  xpRadius = 0.1;
+  hitboxRadius = 0.01;
+  visionRadius = 0.2;
+  damage = 10;
+  health = 100;
+  healthRegeneration = 0;
+  mana = 100;
+  manaRegeneration = 0;
+  speed = 40;
+  level = 1;
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -194,27 +214,54 @@ class Entity extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this, 0);
     this.kind = kind;
-    if (kind !== "base" && kind !== "ui") {
-      this.body.setCircle(this.body.halfWidth);
-    }
 
-    entities.forEach((entity) => {
-      scene.physics.add.overlap(this, entity);
-    });
     entities.push(this);
+  }
+  resize(w, h) {
+    this.setScale(
+      (config.width * w) / this.body.width,
+      (config.height * h) / this.body.height
+    );
+  }
+  distanceTo(entity) {
+    return (
+      Phaser.Math.Distance.Between(this.x, this.y, entity.x, entity.y) /
+      config.width
+    );
   }
 
   appendTarget(entity) {
-    this.targets.push(entity);
-    this.currentTarget = this.targets[0];
-  }
-  prependTarget(entity) {
-    this.targets.unshift(entity);
-    this.currentTarget = this.targets[0];
+    if (entity.kind !== PATH) {
+      this.attackTargets.push(entity);
+      this.currentTarget = this.attackTargets[0];
+      this.currentTarget.targetBy = this;
+      return;
+    }
+    this.pathTargets.push(entity);
+    if (!this.currentTarget) {
+      this.currentTarget = this.pathTargets[0];
+      this.currentTarget.targetBy = this;
+    }
   }
   popTarget() {
-    this.targets.shift();
-    this.currentTarget = this.targets[0];
+    if (this.currentTarget) {
+      this.currentTarget.targetBy = null;
+      if (this.currentTarget.kind !== PATH) {
+        this.attackTargets.shift();
+        this.currentTarget = this.attackTargets[0];
+      } else {
+        this.pathTargets.shift();
+        this.currentTarget = this.pathTargets[0];
+      }
+      if (this.currentTarget) {
+        this.currentTarget.targetBy = this;
+      }
+    }
+    if (!this.currentTarget) {
+      if (this.attackTargets.length) this.currentTarget = this.attackTargets[0];
+      else if (this.pathTargets.length)
+        this.currentTarget = this.pathTargets[0];
+    }
   }
 
   disappear() {
@@ -243,6 +290,17 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.appear();
     this.play(ATTACK);
     this.body.setVelocity(0, 0);
+    this.currentTarget.takeDamage(this.damage);
+    if (this.currentTarget.health <= 0) {
+      this.popTarget();
+    }
+  }
+
+  takeDamage(amount) {
+    this.health -= amount;
+    if (this.health <= 0) {
+      this.die();
+    }
   }
 
   die() {
@@ -255,25 +313,29 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   update(_time, delta) {
+    this.lookForTargets();
     if (this.currentTarget) {
-      const distance = Phaser.Math.Distance.Between(
-        this.x,
-        this.y,
-        this.currentTarget.x,
-        this.currentTarget.y
-      );
-      if (distance < 1) {
-        this.idle();
-        this.popTarget();
+      const distance = this.distanceTo(this.currentTarget);
+      if (distance < this.attackRadius + this.currentTarget.hitboxRadius) {
+        this.attack();
       } else {
         this.walkTo(this.currentTarget);
       }
     }
   }
-  resize(w, h) {
-    this.setScale(
-      (config.width * w) / this.body.width,
-      (config.height * h) / this.body.height
-    );
+
+  lookForTargets() {
+    for (const entity of entities) {
+      if (entity === this) continue;
+      const distance = this.distanceTo(entity);
+      if (distance > this.visionRadius) continue;
+      switch (this.kind) {
+        case CREEP:
+          if (entity.kind === RESOURCE && !entity.targetBy) {
+            this.appendTarget(entity);
+          }
+          break;
+      }
+    }
   }
 }
