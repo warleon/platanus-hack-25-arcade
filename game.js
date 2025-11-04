@@ -17,7 +17,77 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Game Constants
+const ARCADE_CONTROLS = {
+  // ===== PLAYER 1 CONTROLS =====
+  // Joystick - Left hand on WASD
+  P1U: ["w"],
+  P1D: ["x"],
+  P1L: ["a"],
+  P1R: ["d"],
+  P1DL: ["z"],
+  P1DR: ["c"],
+  P1UL: ["q"],
+  P1UR: ["e"],
+
+  // Action Buttons - Right hand on home row area (ergonomic!)
+  // Top row (ABC): U, I, O  |  Bottom row (XYZ): J, K, L
+  P1A: ["r"],
+  P1B: ["t"],
+  P1C: ["y"],
+  P1X: ["f"],
+  P1Y: ["g"],
+  P1Z: ["h"],
+
+  // Start Button
+  START1: ["s", "space"],
+
+  // ===== PLAYER 2 CONTROLS =====
+  // Joystick - Right hand on Arrow Keys
+  P2U: ["8"],
+  P2D: ["2"],
+  P2L: ["4"],
+  P2R: ["6"],
+  P2DL: ["1"],
+  P2DR: ["3"],
+  P2UL: ["7"],
+  P2UR: ["9"],
+
+  // Action Buttons - Left hand (avoiding P1's WASD keys)
+  // Top row (ABC): R, T, Y  |  Bottom row (XYZ): F, G, H
+  P2A: ["i"],
+  P2B: ["o"],
+  P2C: ["p"],
+  P2X: ["k"],
+  P2Y: ["l"],
+  P2Z: ["ñ"],
+
+  // Start Button
+  START2: ["5", "0"],
+};
+
+// Build reverse lookup: keyboard key → arcade button code
+const KEYBOARD_TO_ARCADE = {};
+for (const [arcadeCode, keyboardKeys] of Object.entries(ARCADE_CONTROLS)) {
+  if (keyboardKeys) {
+    // Handle both array and single value
+    const keys = Array.isArray(keyboardKeys) ? keyboardKeys : [keyboardKeys];
+    keys.forEach((key) => {
+      KEYBOARD_TO_ARCADE[key] = arcadeCode;
+    });
+  }
+}
+
+const DIRECTIONS = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+  upLeft: { x: -1, y: -1 },
+  upRight: { x: 1, y: -1 },
+  downLeft: { x: -1, y: 1 },
+  downRight: { x: 1, y: 1 },
+};
+
 const SPRITE_SHEET =
   "data:image/webp;base64,UklGRkQAAABXRUJQVlA4TDgAAAAvP8ADAB8gFkz8kXLoHJyQgNjjvz12iAIBIkiJCKHu5j/GHY0AYbbRJCc5yUO4b0T/Y9uqVAH+Ag==";
 
@@ -55,8 +125,11 @@ const BASE = "base";
 const UI = "ui";
 // Game variables
 let graphics;
-const resources = [];
 const entities = [];
+let P1Selection = null;
+let P2Selection = null;
+const P1Resources = [];
+const P2Resources = [];
 
 // Game functions
 function preload() {
@@ -70,13 +143,14 @@ function preload() {
     frameHeight: 128,
   });
 }
+
 function create() {
   const scene = this;
   graphics = this.add.graphics();
 
   for (let i = 0; i < 2; i++) {
-    resources.push({ x: 0.1, y: i * 0.33 + 0.33, size: 0.05 });
-    resources.push({ x: 0.9, y: i * 0.33 + 0.33, size: 0.05 });
+    P1Resources.push({ x: 0.1, y: i * 0.33 + 0.33, size: 0.05 });
+    P2Resources.push({ x: 0.9, y: i * 0.33 + 0.33, size: 0.05 });
   }
 
   // Keyboard input
@@ -111,9 +185,15 @@ function create() {
   // Entities
   const base1 = new Entity(scene, 0.2, 0.1, BASE, "castle");
   base1.resize(0.4, 0.2);
+  P1Selection = base1;
   const base2 = new Entity(scene, 0.8, 0.9, BASE, "castle");
   base2.resize(0.4, 0.2);
-  resources.forEach((res, index) => {
+  P2Selection = base2;
+  P1Resources.forEach((res, index) => {
+    const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
+    resource.resize(res.size);
+  });
+  P2Resources.forEach((res, index) => {
     const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
     resource.resize(res.size);
   });
@@ -137,7 +217,70 @@ function create() {
   playTone(this, 440, 0.1);
 }
 
-function onInput(event) {}
+function onInput(event) {
+  // Normalize keyboard input to arcade codes for easier testing
+  const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
+  const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
+  if (!match) {
+    return;
+  }
+
+  if (event.preventDefault) {
+    event.preventDefault();
+  }
+
+  const playerKey = match[1];
+  const directionKey = match[2];
+  const directionVectors = {
+    U: DIRECTIONS.up,
+    D: DIRECTIONS.down,
+    L: DIRECTIONS.left,
+    R: DIRECTIONS.right,
+    UL: DIRECTIONS.upLeft,
+    UR: DIRECTIONS.upRight,
+    DL: DIRECTIONS.downLeft,
+    DR: DIRECTIONS.downRight,
+  };
+  const direction = directionVectors[directionKey];
+  if (!direction) {
+    return;
+  }
+
+  let currentSelection = playerKey === "P1" ? P1Selection : P2Selection;
+  const otherSelection = playerKey === "P1" ? P2Selection : P1Selection;
+  if (!currentSelection || currentSelection.active === false) {
+    if (playerKey === "P1" && P1Selection) {
+      const toClear = P1Selection;
+      P1Selection = null;
+      updateSelectionTint(toClear);
+    } else if (playerKey === "P2" && P2Selection) {
+      const toClear = P2Selection;
+      P2Selection = null;
+      updateSelectionTint(toClear);
+    }
+    currentSelection = null;
+  }
+
+  const origin = currentSelection;
+  const next = findClosestInDirection(origin, direction);
+  if (!next) {
+    return;
+  }
+
+  if (playerKey === "P1") {
+    const previous = P1Selection;
+    P1Selection = next;
+    updateSelectionTint(previous);
+    updateSelectionTint(P1Selection);
+  } else {
+    const previous = P2Selection;
+    P2Selection = next;
+    updateSelectionTint(previous);
+    updateSelectionTint(P2Selection);
+  }
+
+  updateSelectionTint(otherSelection);
+}
 
 function update(_time, delta) {
   entities.forEach((entity) => {
@@ -188,6 +331,23 @@ function drawRect(color, x, y, width, height = null) {
   const w = width * config.width;
   const h = height * config.width;
   graphics.fillRect(x * config.width - w / 2, y * config.height - h / 2, w, h);
+}
+
+function updateSelectionTint(entity) {
+  if (!entity || typeof entity.setTint !== "function") {
+    return;
+  }
+  const selectedByP1 = entity === P1Selection;
+  const selectedByP2 = entity === P2Selection;
+  if (selectedByP1 && selectedByP2) {
+    entity.setTint(0xffff00);
+  } else if (selectedByP1) {
+    entity.setTint(0x00ff00);
+  } else if (selectedByP2) {
+    entity.setTint(0x0000ff);
+  } else {
+    entity.clearTint();
+  }
 }
 
 class Entity extends Phaser.GameObjects.Sprite {
@@ -342,4 +502,55 @@ class Entity extends Phaser.GameObjects.Sprite {
       }
     }
   }
+}
+
+// Finds the closes entity to the current selection in the given direction
+function findClosestInDirection(current, dir) {
+  if (!current || !dir) {
+    return null;
+  }
+
+  const dirLength = Math.hypot(dir.x, dir.y);
+  if (!dirLength) {
+    return null;
+  }
+
+  const dirX = dir.x / dirLength;
+  const dirY = dir.y / dirLength;
+
+  let closest = null;
+  let closestDistanceSq = Infinity;
+
+  for (const entity of entities) {
+    if (
+      !entity ||
+      entity === current ||
+      entity.kind === UI ||
+      entity.kind === PATH
+    ) {
+      continue;
+    }
+
+    const dx = entity.x - current.x;
+    const dy = entity.y - current.y;
+    const distanceSq = dx * dx + dy * dy;
+    if (!distanceSq || distanceSq >= closestDistanceSq) {
+      continue;
+    }
+
+    const projection = dx * dirX + dy * dirY;
+    if (projection <= 0) {
+      continue;
+    }
+
+    const cosAngle = projection / Math.sqrt(distanceSq);
+    if (cosAngle < 0.5) {
+      continue;
+    }
+
+    closest = entity;
+    closestDistanceSq = distanceSq;
+  }
+
+  return closest;
 }
