@@ -154,6 +154,7 @@ function create() {
   }
 
   // Keyboard input
+  console.log("Setting up keyboard input");
   this.input.keyboard.on("keydown", onInput);
 
   // Animations
@@ -221,6 +222,7 @@ function onInput(event) {
   // Normalize keyboard input to arcade codes for easier testing
   const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
   const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
+
   if (!match) {
     return;
   }
@@ -242,6 +244,8 @@ function onInput(event) {
     DR: DIRECTIONS.downRight,
   };
   const direction = directionVectors[directionKey];
+
+  console.log(`Player ${playerKey} moves selection ${directionKey}`);
   if (!direction) {
     return;
   }
@@ -504,50 +508,50 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 }
 
-// Finds the closes entity to the current selection in the given direction
+//Finds the closes entity to the current selection in the given direction
 function findClosestInDirection(current, dir) {
-  if (!current || !dir) {
-    return null;
-  }
+  if (!current || !dir) return null;
 
-  const dirLength = Math.hypot(dir.x, dir.y);
-  if (!dirLength) {
-    return null;
-  }
-
-  const dirX = dir.x / dirLength;
-  const dirY = dir.y / dirLength;
+  const direction = new Phaser.Math.Vector2(dir.x, dir.y).normalize(); // Normalize input direction
+  if (direction.lengthSq() === 0) return null;
 
   let closest = null;
   let closestDistanceSq = Infinity;
 
   for (const entity of entities) {
+    // Skip invalid or irrelevant entities
     if (
       !entity ||
       entity === current ||
       entity.kind === UI ||
-      entity.kind === PATH
-    ) {
+      entity.kind === PATH ||
+      entity.health <= 0
+    )
       continue;
-    }
 
-    const dx = entity.x - current.x;
-    const dy = entity.y - current.y;
-    const distanceSq = dx * dx + dy * dy;
-    if (!distanceSq || distanceSq >= closestDistanceSq) {
-      continue;
-    }
+    // Vector from current to candidate entity
+    const toTarget = new Phaser.Math.Vector2(
+      entity.x - current.x,
+      entity.y - current.y
+    );
+    const distanceSq = toTarget.lengthSq();
 
-    const projection = dx * dirX + dy * dirY;
-    if (projection <= 0) {
-      continue;
-    }
+    // Skip if same position or farther than current closest
+    if (distanceSq === 0 || distanceSq >= closestDistanceSq) continue;
 
+    // Projection of target vector onto input direction (dot product)
+    const projection = toTarget.dot(direction);
+
+    // Ignore targets behind the current entity (negative projection)
+    if (projection <= 0) continue;
+
+    // Cosine of the angle between toTarget and direction
     const cosAngle = projection / Math.sqrt(distanceSq);
-    if (cosAngle < 0.5) {
-      continue;
-    }
 
+    // Filter out entities that are too far off-angle (> 45° from direction)
+    if (cosAngle < 0.7) continue;
+
+    // This candidate is closer and in the right direction
     closest = entity;
     closestDistanceSq = distanceSq;
   }
