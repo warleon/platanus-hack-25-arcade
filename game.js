@@ -141,6 +141,7 @@ let graphics;
 const entities = [];
 let player1 = null;
 let player2 = null;
+let round = 0;
 
 // Game functions
 function preload() {
@@ -417,6 +418,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   level = 1;
   attackable = true;
   generateResource = () => {}; //to be overridden by player
+  spells = []; // to be overridden by player, must be 6
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -574,6 +576,23 @@ class Player {
     const casino = new Entity(scene, x, y, RESOURCE, "casino");
     church.flipX = this.mirror;
     this.resources.push(casino);
+  }
+  createEnemies(scene) {
+    // To be implemented
+  }
+  createHeroes(scene) {
+    // To be implemented
+  }
+  createBase(scene) {
+    // To be implemented
+  }
+  // 1-2-3
+  // 4-5-6
+  onPress(button) {
+    if (!this.selection || this.selection.spells.length < button) {
+      return;
+    }
+    this.selection.spells[button - 1]();
   }
 }
 
