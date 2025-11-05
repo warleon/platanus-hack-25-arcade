@@ -99,6 +99,12 @@ const HEALING_ICON =
 
 const HIT_ICON =
   "data:image/webp;base64,UklGRrwAAABXRUJQVlA4TK8AAAAvH8AHECegkI0kOLavxuqcwpFJ2/RvdU7GtCto24ZNtfsP3OY/ANS+u9v5Hhw0kiQ3JxnB3JrArQPA6w4BJ8uf1D15EET0fwLKyfJWCoBpCJSzu3PPvDNg45PxRPqS2uR+xrcCg2AWGi94DbB4z6pMUmAjvTIlMNHbKH71BIsB1l4pLSmQ3OvCOFho7hIrjteVOK68vC5l5uMXzTMz9x/E8UfnJ1vpml+AAaWcLG8FAA==";
+
+const CHURCH =
+  "data:image/webp;base64,UklGRkYCAABXRUJQVlA4TDoCAAAvP8APECdAkG0bG8FGc4wLBMiUAz06EGTbxmawSRzj8x8AdWbNP0iMbTVsJexU8FAKME8qIBYq4G9E/03ZxvFsAxH9nwBJLvL0c/ZYfWx5bH2s/H+vh7a6PFVufV5PbesNL/ut14294KH+g/WGF6wPKZbcpyK3ebnR0bGkzAv2TAdYcr0qkNgImlrKXYH1YitQsmPJVWA5+XSQAPm2xOZe9ILHg2K9cnoB8PqI6InC2HW52NxPIFJqyi4+Xk8oX/DcjKy4+KvuBWZ05aWCqFwuZmvFjDSStAMUUOIiZoAkcagsRgWwGy8a5pugAgDJxpNuSKmegUpSd8BUEyNhpkaqYQdv8AykKVSNTMTwN6lnIGrXaopE6/GmKk7NuJNkZjvBOQE1Wqq/55hvvQDQDMzMNiP8jUvTSiWNypPvmBEjvFzAzHgguYo4vxETETVBgnowEWGfEYExhl7AqGcqIjIjonHEKICeKUgjuB7iWCNGw6kZ1UiqrZI4jnIwKhVU2CpXzXtEtArAeCCpqyQ6vUcEC5QHklgkU7GPGTELmFhTBRgWMQapeoJVcgpr3xggwINJds4D2jfiQrEk1OscKSUViyRHLe4FCaOpSfLT3L1njGqrpNy9Kt3R5oHURdJbre7dp9cDSaxyc6N6+HCr3wijyu3q/3xG67t7D4Pcd61zRFS3XieWe3/u3/cc3mute+EPtmmjh7sr3WnyQ4RHmzvYXclfSPU233C4gvLbfXifuuj+kh9/ejgX+TU=";
+
+const CASINO =
+  "data:image/webp;base64,UklGRpIFAABXRUJQVlA4TIUFAAAvP8APEKfAJgCANDi8Lr810P5NSAGTHGwkSU4jZooUKmT8/9dsVamJJEk5enBA2UVfr+L9m4GUa/4DAAAMhC8DH4PSoNqDZBJMYXOYa508pPDtv6g6+McSk1rIaVG8r1OgkbQCBdt24zaSepAJfALEx7D/zUpJVXV6ARH9n4DrT/f10/8H9Kfl/nH4Wd0F/qjs5P5RF1uvn521fxaztv6orAJ/0vQkiZ8xz6pqAPP6H+qZGTzZnTsBmBlmZvifmMHXrGru/WLAdHf/IW+SADYAi5NVtYGNE2E455zu4R/wHgeArOI5EZFdhU0g4gSraOcEZ34XuwkAJ6ryPHd2cu9CnBeYxTnk75pugNvNmYVTmZkk9q6srF2EmbkzzszvmAGArDrmu/IJzcy9AWRVVoLOKiKi59c4BGCHVcyq5N4bux/7nMNn5slKmEVEzy9wHHB3P6zi1g0Ftr6R55w+3KyCmRkZM/29caCOu7OqNoBDAJkvSQBJdLKqzAhEnPHvNAGcLHrWBvbWz0c+8oU8N5EgMwmQGcH5BgcA47CyFEDzXqtn7bclIuvv9cmTyJ1JHvOI0V/wHSdLAezuJWtx+QtERHqt1ansrtxqbhEDfZsZwM3tJAHwI9JrLVGSubFlSctaopLNgypzOydm4oUc4HD7rlLsLUtEWkSqs/bemJHPWp9e6yaTWZubZAz8K8+sqkwA3iJL1qd7mJl7I05n6lpLOERmVSUBDkKvS+NhJ7NSFeeWliXa2fwqJpNL1Hv17oeZWQyC1zWcgbs7s3Tvs0S6PWs69stGRGtl32ut6QbfbABeV3OACPfMhJyPPKsq4vgLgJjeLbLWWoLdVf7sgd8vx9288mws6W6VqmScYyc3ntN7s5+O01WVWcVB3Bc5w2flJtdaIl5VOR3nnAMAFtx77yVLZIFdhePuPTDXxwYOsvIhIqxKVDNezbSBvbcsEREQVeruNkC84cSJzGSqqKpWpZLD84jTeBMR1Z1Z5W7mA5hrRwwiztlZwEdElmRls9jdTZJ7o/fea60ln/NIbu8BwnUiOCSBSkXfS4RZVYMiq/YTe+8tIkukWVUA2a2AuXSQg3POySqivVVWVlaNAgQA7r23LtEtBDN3nHPOABaiTcb4OUyy6lBkrSWdVVX57P2krCWSullFnhN8+D/KmeY0YcaqvVvWallSWc/9/vn3wyVUZiZskz0ALP7V4TA4NHPfVckW/6wlazVJPvqvtdYSdmZV1Xb3HsUAvpQvHHPzYlZWy1oia4187S/ZWVVadPcZzKjrunQYEez2qsLOLGSKSLesx1oPkcy9q0hj8ewGdOD3v5eyGREzueFmvisrs6ra+XU3kJlJmLk5OW5mFvf653KdjmBwtpudzVRWVWZWfZX1hBaOm51RmMHCP/LQJhkRM0bsopmhqrIqs96zCjCr8nAbvEbct/xzXarajCeHnWlmXji+d2YmM1kwY5mZVZIDgxks5Jb1z3WF6swb2Q3zzXJ35wYUAMoeNLPdM26P8Lhvua7rclVtPp4z47vOCyICEUYzs0qzmQEMMLOIz5I3V1U2g49zprPwqHg3dzNjdjcUT7Og3Ev+flxuqurNL86Zd0aQEcGYV4XBzAxh7vd9L7ne3VW1m4w4355vEmZmMNhrRNz3LXJ9T6e7+ZgvXgH7EjMKs4hwv+97yf3V5W76nMfM+Lfs65kBgIj7KSLXd90cqqpokmHnu/ZdHY8IvZ8icn3f3VwVKtBm8zvxjYigyOff+76XiPz7C9flavrO3+1yf+7nEpF1/UY1hUJFRUQg8855uz/3uzzX9VtUYa7yq/f9ue/P59/7fa3Hun6viLiqukK/9215vf7kxwyq6qqi+gtLvrz+/Dde5X3J6/Vf/V3X7wUA";
 // path points
 const pathPoints = [
   // bottom to top
@@ -133,10 +139,8 @@ const UI = "ui";
 let scene;
 let graphics;
 const entities = [];
-let P1Selection = null;
-let P2Selection = null;
-const P1Resources = [];
-const P2Resources = [];
+let player1 = null;
+let player2 = null;
 
 // Game functions
 function preload() {
@@ -158,16 +162,23 @@ function preload() {
     frameWidth: 32,
     frameHeight: 32,
   });
+  this.load.image("church", CHURCH, {
+    frameWidth: 64,
+    frameHeight: 64,
+  });
+  this.load.image("casino", CASINO, {
+    frameWidth: 64,
+    frameHeight: 64,
+  });
 }
 
 function create() {
   scene = this;
   graphics = this.add.graphics();
-
-  for (let i = 0; i < 2; i++) {
-    P1Resources.push({ x: 0.1, y: i * 0.33 + 0.33, size: 0.05 });
-    P2Resources.push({ x: 0.9, y: i * 0.33 + 0.33, size: 0.05 });
-  }
+  player1 = new Player(1);
+  player2 = new Player(2);
+  player1.createResources(scene);
+  player2.createResources(scene);
 
   // Keyboard input
   console.log("Setting up keyboard input");
@@ -206,14 +217,6 @@ function create() {
   const base2 = new Entity(scene, 0.8, 0.9, BASE, "castle");
   base2.resize(0.4, 0.2);
   P2Selection = base2;
-  P1Resources.forEach((res, index) => {
-    const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
-    resource.resize(res.size);
-  });
-  P2Resources.forEach((res, index) => {
-    const resource = new Entity(scene, res.x, res.y, RESOURCE, "test");
-    resource.resize(res.size);
-  });
 
   const enemy = new Entity(
     scene,
@@ -413,6 +416,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   speed = 40;
   level = 1;
   attackable = true;
+  generateResource = () => {}; //to be overridden by player
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -513,9 +517,7 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.play(DIE);
     this.body.setVelocity(0, 0);
     this.attackable = false;
-    setTimeout(() => {
-      this.disappear();
-    }, 1000);
+    this.disappear();
   }
 
   update(_time, delta) {
@@ -552,9 +554,26 @@ class Entity extends Phaser.GameObjects.Sprite {
 
 class Player {
   constructor(id) {
-    this.id = id;
     this.selection = null;
-    this.resources = 0;
+    this.resources = [];
+    this.mirror = id % 2;
+    this.faith = 0;
+    this.luck = 0;
+  }
+
+  createResources(scene) {
+    console.log(`Creating resources mirror: ${this.mirror}`);
+    const x = 0.95 - this.mirror * 0.9;
+    let y = 0.33 + this.mirror * 0.34;
+    // Church
+    const church = new Entity(scene, x, y, RESOURCE, "church");
+    church.flipX = this.mirror;
+    this.resources.push(church);
+    // Casino
+    y -= 0.34 * (this.mirror - 0.5) * 2;
+    const casino = new Entity(scene, x, y, RESOURCE, "casino");
+    church.flipX = this.mirror;
+    this.resources.push(casino);
   }
 }
 
