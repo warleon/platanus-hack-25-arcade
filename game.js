@@ -103,6 +103,9 @@ const HIT_ICON =
 const THUNDER_ICON =
   "data:image/webp;base64,UklGRlYBAABXRUJQVlA4TEkBAAAvH8AHAE+gNAAIKYnSL9rE/tUg3DOMkQZoHKMBGoci6ps9w/1TmGmA5OVn/FTgpIGVzGsAK8x/zN/sCIjLIA9JdFGuP6sXANfW3kZKZmqR6RZ5QztnhJezHUFTTDnrEaHLTGuSXZMpc5jnTaQXiOj/BOA/HTvrjSG2GmCe97Dxmffdb7luXndW8t0zVFXOl3PXxcrQBt4HgfUjYQUiusD7vIcNI2cVNo6c7TWj3FIVKcRza50NWqWIhkohRnaPKtQbxQrxfDzsjiGiHrImClfxcI9QRUYGJcLO4Ug3ItKGeGBIkRwGfSJDOuGEtdZET0QkYpgzETF6fK+vDemMOYsTbehwhF6NWZE4K4SF9c1anxORbFfKcQogLCy1szAKsC4iElcAZOsAqYhIUX4GmIb0uahdgqR4LpbSBunVMiwtPpceqxevHr/ZAAA=";
 
+const RADIAL_ICON =
+  "data:image/webp;base64,UklGRvABAABXRUJQVlA4TOQBAAAvH8AHAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNkrRtchoHxjnTLWevaF3AotAJVO1ZzzMN3iYG52x36WE1K4R8AauYrVOjjXNQXc+PzxDR/wmIogvRf345EpnEGK3MZDIyRmt9LTU61UkGAKPUpNqoU6nRKQAAjI3RyqRGxQC7mANcSrXWSqcZ7CIWU8hirYzWCsaI1jmAsVImvT0BRFciIoCKVJzlM0REhziFkVIZACK6vQIxH42VBrCuwjd005aIuZrADNEVVJO16OBQBrPKoq/JbxcWp9cALDrnieietS6HnQqx+Ei0ILqBOM3hvcXCU9vNaRt/lfkDxKoiWnE3J1thfrtwBVG7Yp5TaavzM2c9fWxD6Duiop7u4T0ivwp9WHoqSyyw9vcWHPqBie7VV388Ilq0PHDo73uq35atv9euAm965nt0rzns6V7H/SBrZqqpOVzfW3TMG5Gel56ah+3vruMgIgdhef9j8+LF/DP/Y+iXXd08v9WtOPyVRNYcNnHz4iG94yCnki8i/PfipevNzp/1X/kafZE+DB/3L8Ynet6IRCIHQ/Ank3v7GxE5JV9ERLqH";
+
 const CHURCH =
   "data:image/webp;base64,UklGRkYCAABXRUJQVlA4TDoCAAAvP8APECdAkG0bG8FGc4wLBMiUAz06EGTbxmawSRzj8x8AdWbNP0iMbTVsJexU8FAKME8qIBYq4G9E/03ZxvFsAxH9nwBJLvL0c/ZYfWx5bH2s/H+vh7a6PFVufV5PbesNL/ut14294KH+g/WGF6wPKZbcpyK3ebnR0bGkzAv2TAdYcr0qkNgImlrKXYH1YitQsmPJVWA5+XSQAPm2xOZe9ILHg2K9cnoB8PqI6InC2HW52NxPIFJqyi4+Xk8oX/DcjKy4+KvuBWZ05aWCqFwuZmvFjDSStAMUUOIiZoAkcagsRgWwGy8a5pugAgDJxpNuSKmegUpSd8BUEyNhpkaqYQdv8AykKVSNTMTwN6lnIGrXaopE6/GmKk7NuJNkZjvBOQE1Wqq/55hvvQDQDMzMNiP8jUvTSiWNypPvmBEjvFzAzHgguYo4vxETETVBgnowEWGfEYExhl7AqGcqIjIjonHEKICeKUgjuB7iWCNGw6kZ1UiqrZI4jnIwKhVU2CpXzXtEtArAeCCpqyQ6vUcEC5QHklgkU7GPGTELmFhTBRgWMQapeoJVcgpr3xggwINJds4D2jfiQrEk1OscKSUViyRHLe4FCaOpSfLT3L1njGqrpNy9Kt3R5oHURdJbre7dp9cDSaxyc6N6+HCr3wijyu3q/3xG67t7D4Pcd61zRFS3XieWe3/u3/cc3mute+EPtmmjh7sr3WnyQ4RHmzvYXclfSPU233C4gvLbfXifuuj+kh9/ejgX+TU=";
 
@@ -183,10 +186,11 @@ function create() {
   player1 = new Player(1);
   player2 = new Player(2);
   player1.createResources(scene);
+  player1.createBase(scene);
   player2.createResources(scene);
+  player2.createBase(scene);
 
   // Keyboard input
-  console.log("Setting up keyboard input");
   this.input.keyboard.on("keydown", onInput);
 
   // Animations
@@ -216,12 +220,6 @@ function create() {
   });
 
   // Entities
-  const base1 = new Entity(scene, 0.2, 0.1, BASE, "castle");
-  base1.resize(0.4, 0.2);
-  P1Selection = base1;
-  const base2 = new Entity(scene, 0.8, 0.9, BASE, "castle");
-  base2.resize(0.4, 0.2);
-  P2Selection = base2;
 
   const enemy = new Entity(
     scene,
@@ -269,7 +267,6 @@ function onInput(event) {
   };
   const direction = directionVectors[directionKey];
 
-  console.log(`Player ${playerKey} moves selection ${directionKey}`);
   if (!direction) {
     return;
   }
@@ -422,6 +419,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   level = 1;
   attackable = true;
   generateResource = () => {}; //to be overridden by player
+  selectOnDeath = () => {}; // to be overridden by player
   spells = []; // to be overridden by player, must be 6
 
   constructor(scene, x, y, kind, texture) {
@@ -569,7 +567,6 @@ class Player {
   }
 
   createResources(scene) {
-    console.log(`Creating resources mirror: ${this.mirror}`);
     const x = 0.95 - this.mirror * 0.9;
     let y = 0.33 + this.mirror * 0.34;
     // Church
@@ -582,13 +579,17 @@ class Player {
     church.flipX = this.mirror;
     this.resources.push(casino);
   }
+  createBase(scene) {
+    let x = 0.8 - this.mirror * 0.6;
+    let y = 0.9 - this.mirror * 0.8;
+    const base = new Entity(scene, x, y, BASE, "castle");
+    base.resize(0.4, 0.2);
+    this.select(base);
+  }
   createEnemies(scene) {
     // To be implemented
   }
   createHeroes(scene) {
-    // To be implemented
-  }
-  createBase(scene) {
     // To be implemented
   }
   // 1-2-3
@@ -598,6 +599,9 @@ class Player {
       return;
     }
     this.selection.spells[button - 1]();
+  }
+  select(entity) {
+    this.selection = entity;
   }
 }
 
