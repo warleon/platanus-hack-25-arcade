@@ -115,6 +115,9 @@ const CASINO =
 const MELEE_HERO_WALK =
   "data:image/webp;base64,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";
 
+const GOBLIN_WALK =
+  "data:image/webp;base64,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";
+
 // path points
 const pathPoints = [
   [
@@ -188,6 +191,10 @@ function preload() {
     frameWidth: 22,
     frameHeight: 26,
   });
+  this.load.spritesheet("goblin_walk", GOBLIN_WALK, {
+    frameWidth: 15,
+    frameHeight: 24,
+  });
 }
 
 function create() {
@@ -222,13 +229,14 @@ function create() {
     frameRate: 2,
     repeat: -1,
   });
+  // knight
   scene.anims.create({
     key: "melee_walk_up",
     frames: scene.anims.generateFrameNumbers("melee_hero_walk", {
-      start: 0,
+      start: 1,
       end: 8,
     }),
-    frameRate: 9,
+    frameRate: 8,
     repeat: -1,
   });
   scene.anims.create({
@@ -252,6 +260,43 @@ function create() {
   scene.anims.create({
     key: "melee_walk_right",
     frames: scene.anims.generateFrameNumbers("melee_hero_walk", {
+      start: 27,
+      end: 35,
+    }),
+    frameRate: 9,
+    repeat: -1,
+  });
+  // goblin
+  scene.anims.create({
+    key: "goblin_walk_up",
+    frames: scene.anims.generateFrameNumbers("goblin_walk", {
+      start: 1,
+      end: 8,
+    }),
+    frameRate: 8,
+    repeat: -1,
+  });
+  scene.anims.create({
+    key: "goblin_walk_left",
+    frames: scene.anims.generateFrameNumbers("goblin_walk", {
+      start: 9,
+      end: 17,
+    }),
+    frameRate: 9,
+    repeat: -1,
+  });
+  scene.anims.create({
+    key: "goblin_walk_down",
+    frames: scene.anims.generateFrameNumbers("goblin_walk", {
+      start: 18,
+      end: 26,
+    }),
+    frameRate: 9,
+    repeat: -1,
+  });
+  scene.anims.create({
+    key: "goblin_walk_right",
+    frames: scene.anims.generateFrameNumbers("goblin_walk", {
       start: 27,
       end: 35,
     }),
@@ -608,8 +653,9 @@ class Player {
         this.path[0].x / config.width,
         this.path[0].y / config.height,
         CREEP,
-        "test"
+        "goblin_walk"
       );
+      creep.walkAnimationPrefix = "goblin_walk";
       creep.targettable.push(...this.heroes);
       creep.targettable.push(...this.resources);
       for (const hero of this.heroes) {
