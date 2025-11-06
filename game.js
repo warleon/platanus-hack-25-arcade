@@ -270,18 +270,8 @@ function update(_time, delta) {
 
 function drawGame() {
   graphics.clear();
-
-  const colors = [0x00ff00, 0x0000ff, 0xffff00];
-  // UI
-  drawRect(0xff0000, 0.2, 0.9, 0.4, 0.2); // bottom bar BG
-  drawRect(0x00ff00, 0.08, 0.88, 0.14, 0.14); // P1 portrait
-  drawRect(0x00ff00, 0.2, 0.82, 0.05, 0.05); // P1 spell 1
-  drawRect(0x00ff00, 0.27, 0.82, 0.05, 0.05); // P1 spell 2
-  drawRect(0x00ff00, 0.34, 0.82, 0.05, 0.05); // P1 spell 3
-  drawRect(0x00ff00, 0.2, 0.9, 0.05, 0.05, "hit_icon"); // P1 item 1
-  drawRect(0x00ff00, 0.27, 0.9, 0.05, 0.05, "heal_icon"); // P1 item 2
-  drawRect(0x00ff00, 0.34, 0.9, 0.05, 0.05); // P1 item 3
-  drawRect(0xff0000, 0.8, 0.1, 0.4, 0.2);
+  player1.placeUI();
+  player2.placeUI();
 }
 
 function restartGame(scene) {
@@ -307,35 +297,6 @@ function playTone(scene, frequency, duration) {
 
   oscillator.start(audioContext.currentTime);
   oscillator.stop(audioContext.currentTime + duration);
-}
-
-function drawRect(color, x, y, width, height, sprite) {
-  if (!height) {
-    height = width;
-  }
-  if (!sprite) {
-    graphics.fillStyle(color, 1);
-    const w = width * config.width;
-    const h = height * config.width;
-    graphics.fillRect(
-      x * config.width - w / 2,
-      y * config.height - h / 2,
-      w,
-      h
-    );
-  } else {
-    const w = width * config.width;
-    const h = height * config.width;
-    graphics.fillStyle(color, 1);
-    graphics.fillRect(
-      x * config.width - w / 2,
-      y * config.height - h / 2,
-      w,
-      h
-    );
-    const img = scene.add.image(x * config.width, y * config.height, sprite);
-    img.setDisplaySize(w, h);
-  }
 }
 
 class Entity extends Phaser.GameObjects.Sprite {
@@ -521,14 +482,14 @@ class Player {
 
   createResources(scene) {
     const x = 0.95 - this.mirror * 0.9;
-    let y = 0.33 + this.mirror * 0.34;
+    let y = 0.33;
     // Church
     const church = new Entity(scene, x, y, RESOURCE, "church");
     church.flipX = this.mirror;
     church.onSelectedDeath = this.onSelectionDeath.bind(this);
     this.resources.push(church);
     // Casino
-    y -= 0.34 * (this.mirror - 0.5) * 2;
+    y += 0.34;
     const casino = new Entity(scene, x, y, RESOURCE, "casino");
     church.flipX = this.mirror;
     casino.onSelectedDeath = this.onSelectionDeath.bind(this);
@@ -536,7 +497,7 @@ class Player {
   }
   createBase(scene) {
     let x = 0.8 - this.mirror * 0.6;
-    let y = 0.9 - this.mirror * 0.8;
+    let y = 0.1;
     const base = new Entity(scene, x, y, BASE, "castle");
     base.resize(0.4, 0.2);
     this.base = base;
@@ -560,7 +521,6 @@ class Player {
     if (!entity) {
       return;
     }
-    console.log("PLAYERS from", this.id, this.players);
     this.selection?.clearTint(); // previous selection always clear tint
     this.selection = entity;
     const selectedByOther = entity === this.players[1]?.selection;
@@ -583,8 +543,92 @@ class Player {
     }
   }
 
-  drawUI() {
-    // To be implemented
+  placeUI() {
+    if (this.id % 2) {
+      this.drawUI(0, config.height - 152);
+    } else {
+      this.drawUI(config.width - 304, config.height - 152);
+    }
+  }
+
+  // width = 304 = 76 cells of 4px
+  // height = 152 = 38 cells of 4px
+  // grid:      76
+  //        -----------
+  //     38 |         |
+  //        -----------
+  drawUI(x, y) {
+    const cellSide = 4;
+    let x_offset = cellSide * 2;
+    let y_offset = cellSide * 2;
+    //BG
+    drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
+    // portrait
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 34,
+      cellSide * 34
+    );
+    // icons
+    x_offset += cellSide * 38;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    x_offset += cellSide * 12;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    x_offset += cellSide * 12;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    y_offset += cellSide * 12;
+    x_offset -= cellSide * 24;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    x_offset += cellSide * 12;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    x_offset += cellSide * 12;
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 10,
+      cellSide * 10
+    );
+    // health/mana bars
+    y_offset += cellSide * 12;
+    x_offset -= cellSide * 24;
+    drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
+    drawRect(0x00ff00, x + x_offset, y + y_offset, cellSide * 17, cellSide * 4);
+    y_offset += cellSide * 6;
+    drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
+    drawRect(0x0000ff, x + x_offset, y + y_offset, cellSide * 17, cellSide * 4);
   }
 }
 
@@ -645,4 +689,23 @@ function findClosestInDirection(current, dir) {
   }
 
   return closest;
+}
+
+function drawRect(color, x, y, width, height, sprite) {
+  if (!height) {
+    height = width;
+  }
+  if (!sprite) {
+    graphics.fillStyle(color, 1);
+    const w = width;
+    const h = height;
+    graphics.fillRect(x, y, w, h);
+  } else {
+    const w = width;
+    const h = height;
+    graphics.fillStyle(color, 1);
+    graphics.fillRect(x, y, w, h);
+    const img = scene.add.image(x, y, sprite);
+    img.setDisplaySize(w, h);
+  }
 }
