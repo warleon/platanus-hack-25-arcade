@@ -183,12 +183,6 @@ function preload() {
 function create() {
   scene = this;
   graphics = this.add.graphics();
-  player1 = new Player(1);
-  player2 = new Player(2);
-  player1.createResources(scene);
-  player1.createBase(scene);
-  player2.createResources(scene);
-  player2.createBase(scene);
 
   // Keyboard input
   this.input.keyboard.on("keydown", onInput);
@@ -218,24 +212,13 @@ function create() {
     frameRate: 2,
     repeat: -1,
   });
-
-  // Entities
-
-  const enemy = new Entity(
-    scene,
-    pathPoints[0].x,
-    pathPoints[0].y,
-    CREEP,
-    "test"
-  );
-  const enemiesPath = pathPoints.map((point) => {
-    const p = new Entity(scene, point.x, point.y, PATH, "test");
-    p.disappear();
-    return p;
-  });
-  for (const target of enemiesPath) {
-    enemy.appendTarget(target);
-  }
+  // entities
+  player1 = new Player(1);
+  player2 = new Player(2);
+  player1.createResources(scene);
+  player1.createBase(scene);
+  player2.createResources(scene);
+  player2.createBase(scene);
 
   playTone(this, 440, 0.1);
 }
@@ -271,40 +254,11 @@ function onInput(event) {
     return;
   }
 
-  let currentSelection = playerKey === "P1" ? P1Selection : P2Selection;
-  const otherSelection = playerKey === "P1" ? P2Selection : P1Selection;
-  if (!currentSelection || currentSelection.active === false) {
-    if (playerKey === "P1" && P1Selection) {
-      const toClear = P1Selection;
-      P1Selection = null;
-      updateSelectionTint(toClear);
-    } else if (playerKey === "P2" && P2Selection) {
-      const toClear = P2Selection;
-      P2Selection = null;
-      updateSelectionTint(toClear);
-    }
-    currentSelection = null;
-  }
-
-  const origin = currentSelection;
-  const next = findClosestInDirection(origin, direction);
-  if (!next) {
-    return;
-  }
-
   if (playerKey === "P1") {
-    const previous = P1Selection;
-    P1Selection = next;
-    updateSelectionTint(previous);
-    updateSelectionTint(P1Selection);
-  } else {
-    const previous = P2Selection;
-    P2Selection = next;
-    updateSelectionTint(previous);
-    updateSelectionTint(P2Selection);
+    player1.moveSelectionTo(direction);
+  } else if (playerKey === "P2") {
+    player2.moveSelectionTo(direction);
   }
-
-  updateSelectionTint(otherSelection);
 }
 
 function update(_time, delta) {
@@ -384,23 +338,6 @@ function drawRect(color, x, y, width, height, sprite) {
   }
 }
 
-function updateSelectionTint(entity) {
-  if (!entity || typeof entity.setTint !== "function") {
-    return;
-  }
-  const selectedByP1 = entity === P1Selection;
-  const selectedByP2 = entity === P2Selection;
-  if (selectedByP1 && selectedByP2) {
-    entity.setTint(0xffff00);
-  } else if (selectedByP1) {
-    entity.setTint(0x00ff00);
-  } else if (selectedByP2) {
-    entity.setTint(0x0000ff);
-  } else {
-    entity.clearTint();
-  }
-}
-
 class Entity extends Phaser.GameObjects.Sprite {
   pathTargets = [];
   attackTargets = [];
@@ -419,7 +356,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   level = 1;
   attackable = true;
   generateResource = () => {}; //to be overridden by player
-  selectOnDeath = () => {}; // to be overridden by player
+  onSelectedDeath = (entity) => {}; // to be overridden by player
   spells = []; // to be overridden by player, must be 6
 
   constructor(scene, x, y, kind, texture) {
@@ -503,7 +440,7 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.appear();
     this.play(ATTACK);
     this.body.setVelocity(0, 0);
-    this.currentTarget.takeDamage(this.damage);
+    this.currentTarget.takeDamage(this.damage, this);
     if (this.currentTarget.health <= 0) {
       this.popTarget();
     }
@@ -512,7 +449,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   takeDamage(amount, from) {
     this.health -= amount;
     if (this.health <= 0) {
-      this.die();
+      this.die(from);
     }
   }
 
@@ -522,7 +459,7 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.body.setVelocity(0, 0);
     this.attackable = false;
     this.disappear();
-    // if selected by a player, pick the killer as new selection
+    this.onSelectedDeath(by);
   }
 
   update(_time, delta) {
@@ -559,11 +496,27 @@ class Entity extends Phaser.GameObjects.Sprite {
 
 class Player {
   constructor(id) {
+    this.id = id;
     this.selection = null;
     this.resources = [];
-    this.mirror = id % 2;
     this.faith = 0;
     this.luck = 0;
+    this.base = null;
+
+    this.mirror = id % 2;
+    this.tint = id % 2 ? 0x00ff00 : 0x0000ff;
+    this.players = [this];
+    if (id % 2) {
+      this.players.push(player2);
+      if (player2) player2.players[1] = this;
+    } else {
+      this.players.push(player1);
+      if (player1) player1.players[1] = this;
+    }
+  }
+
+  onSelectionDeath(entity) {
+    this.select(entity);
   }
 
   createResources(scene) {
@@ -572,11 +525,13 @@ class Player {
     // Church
     const church = new Entity(scene, x, y, RESOURCE, "church");
     church.flipX = this.mirror;
+    church.onSelectedDeath = this.onSelectionDeath.bind(this);
     this.resources.push(church);
     // Casino
     y -= 0.34 * (this.mirror - 0.5) * 2;
     const casino = new Entity(scene, x, y, RESOURCE, "casino");
     church.flipX = this.mirror;
+    casino.onSelectedDeath = this.onSelectionDeath.bind(this);
     this.resources.push(casino);
   }
   createBase(scene) {
@@ -584,6 +539,7 @@ class Player {
     let y = 0.9 - this.mirror * 0.8;
     const base = new Entity(scene, x, y, BASE, "castle");
     base.resize(0.4, 0.2);
+    this.base = base;
     this.select(base);
   }
   createEnemies(scene) {
@@ -601,7 +557,34 @@ class Player {
     this.selection.spells[button - 1]();
   }
   select(entity) {
+    if (!entity) {
+      return;
+    }
+    console.log("PLAYERS from", this.id, this.players);
+    this.selection?.clearTint(); // previous selection always clear tint
     this.selection = entity;
+    const selectedByOther = entity === this.players[1]?.selection;
+    this.selection.setTint(this.tint);
+    if (this.players[1]) {
+      this.players[1].selection?.setTint(this.players[1].tint);
+    }
+    if (selectedByOther) {
+      this.selection?.setTint(0xffff00);
+    }
+  }
+
+  moveSelectionTo(direction) {
+    if (!this.selection) {
+      this.select(this.base);
+    }
+    const next = findClosestInDirection(this.selection, direction);
+    if (next) {
+      this.select(next);
+    }
+  }
+
+  drawUI() {
+    // To be implemented
   }
 }
 
