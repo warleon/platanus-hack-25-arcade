@@ -463,6 +463,8 @@ class Player {
     this.faith = 0;
     this.luck = 0;
     this.base = null;
+    this.entities = []; // all the entities this player can select
+    this.creepPower = 50;
 
     this.mirror = id % 2;
     this.tint = id % 2 ? 0x00ff00 : 0x0000ff;
@@ -488,12 +490,14 @@ class Player {
     church.flipX = this.mirror;
     church.onSelectedDeath = this.onSelectionDeath.bind(this);
     this.resources.push(church);
+    this.entities.push(church);
     // Casino
     y += 0.34;
     const casino = new Entity(scene, x, y, RESOURCE, "casino");
     church.flipX = this.mirror;
     casino.onSelectedDeath = this.onSelectionDeath.bind(this);
     this.resources.push(casino);
+    this.entities.push(casino);
   }
   createBase(scene) {
     let x = 0.8 - this.mirror * 0.6;
@@ -502,12 +506,14 @@ class Player {
     base.resize(0.4, 0.2);
     this.base = base;
     this.select(base);
+    this.entities.push(base);
   }
   createEnemies(scene) {
     // To be implemented
   }
   createHeroes(scene) {
-    // To be implemented
+    // Range hero
+    // Melee hero
   }
   // 1-2-3
   // 4-5-6
@@ -537,7 +543,11 @@ class Player {
     if (!this.selection) {
       this.select(this.base);
     }
-    const next = findClosestInDirection(this.selection, direction);
+    const next = findClosestInDirection(
+      this.selection,
+      direction,
+      this.entities
+    );
     if (next) {
       this.select(next);
     }
@@ -571,7 +581,7 @@ class Player {
       cellSide * 34,
       cellSide * 34
     );
-    // icons
+    // icon 1
     x_offset += cellSide * 38;
     drawRect(
       0x00ff00,
@@ -580,6 +590,7 @@ class Player {
       cellSide * 10,
       cellSide * 10
     );
+    // icon 2
     x_offset += cellSide * 12;
     drawRect(
       0x00ff00,
@@ -588,6 +599,7 @@ class Player {
       cellSide * 10,
       cellSide * 10
     );
+    // icon 3
     x_offset += cellSide * 12;
     drawRect(
       0x00ff00,
@@ -596,6 +608,7 @@ class Player {
       cellSide * 10,
       cellSide * 10
     );
+    // icon 4
     y_offset += cellSide * 12;
     x_offset -= cellSide * 24;
     drawRect(
@@ -603,16 +616,20 @@ class Player {
       x + x_offset,
       y + y_offset,
       cellSide * 10,
-      cellSide * 10
+      cellSide * 10,
+      "hit_icon"
     );
+    // icon 5
     x_offset += cellSide * 12;
     drawRect(
       0x00ff00,
       x + x_offset,
       y + y_offset,
       cellSide * 10,
-      cellSide * 10
+      cellSide * 10,
+      "heal_icon"
     );
+    // icon 6
     x_offset += cellSide * 12;
     drawRect(
       0x00ff00,
@@ -633,7 +650,7 @@ class Player {
 }
 
 //Finds the closes entity to the current selection in the given direction
-function findClosestInDirection(current, dir) {
+function findClosestInDirection(current, dir, entities) {
   if (!current || !dir) return null;
 
   const direction = new Phaser.Math.Vector2(dir.x, dir.y).normalize(); // Normalize input direction
@@ -695,17 +712,13 @@ function drawRect(color, x, y, width, height, sprite) {
   if (!height) {
     height = width;
   }
+  const w = width;
+  const h = height;
   if (!sprite) {
     graphics.fillStyle(color, 1);
-    const w = width;
-    const h = height;
     graphics.fillRect(x, y, w, h);
   } else {
-    const w = width;
-    const h = height;
-    graphics.fillStyle(color, 1);
-    graphics.fillRect(x, y, w, h);
-    const img = scene.add.image(x, y, sprite);
+    const img = scene.add.image(x + w / 2, y + h / 2, sprite);
     img.setDisplaySize(w, h);
   }
 }
