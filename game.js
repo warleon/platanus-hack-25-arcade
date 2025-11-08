@@ -492,6 +492,8 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   update(_time, delta) {
+    if (this.kind === PATH) return;
+    if (this.kind === BASE) return;
     if (this.currentTarget?.health <= 0) this.popTarget();
     if (!this.currentTarget || this.currentTarget.kind === PATH)
       this.lookForTargets();
@@ -507,6 +509,7 @@ class Entity extends Phaser.GameObjects.Sprite {
         this.walkTo(this.currentTarget);
       }
     } else {
+      if (this.kind === RESOURCE) return;
       this.idle();
     }
   }
