@@ -365,7 +365,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   hitboxRadius = 0.01;
   visionRadius = 0.2;
   damage = 1;
-  health = 100;
+  health = 50;
   healthRegeneration = 0;
   mana = 100;
   manaRegeneration = 0;
@@ -373,10 +373,11 @@ class Entity extends Phaser.GameObjects.Sprite {
   level = 1;
   attackable = true;
   generateResource = () => {}; //to be overridden by player
-  onSelectedDeath = (killed, killer) => {}; // to be overridden by player
+  onDeath = (killed, killer) => {}; // to be overridden by player
   spells = []; // to be overridden by player, must be 6
   walkAnimationPrefix = "";
   attackAnimationPrefix = "";
+  attacking = false;
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -436,36 +437,42 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.setVisible(false);
   }
 
-  appear() {
-    this.setActive(true);
-    this.setVisible(true);
-  }
-
   walkTo(entity) {
-    this.appear();
+    if (!this.active) return;
+    console.log("entity", this.kind, "walks towards", entity.kind);
     this.scene.physics.moveTo(this, entity.x, entity.y, 40);
     this.play(`${this.walkAnimationPrefix}_${this.getDirection()}`, true);
   }
 
   idle() {
-    this.appear();
+    if (!this.active) return;
     this.play(IDLE);
     this.body.setVelocity(0, 0);
   }
 
   attack() {
-    this.appear();
+    if (!this.active) return;
+    console.assert(this.currentTarget);
     this.scene.physics.moveTo(
       this,
       this.currentTarget.x,
       this.currentTarget.y,
       1
     );
+
+    console.log("attack started by", this.kind);
+    this.attacking = true;
     this.play(`${this.attackAnimationPrefix}_${this.getDirection()}`, true);
-    this.currentTarget.takeDamage(this.damage, this);
-    if (this.currentTarget.health <= 0) {
-      this.popTarget();
-    }
+    setTimeout(() => {
+      if (this.health > 0) {
+        this.currentTarget?.takeDamage(this.damage, this);
+        if (this.currentTarget?.health <= 0) {
+          this.popTarget();
+        }
+        console.log("attack finished by", this.kind);
+      }
+      this.attacking = false;
+    }, 1000);
   }
 
   takeDamage(amount, from) {
@@ -476,27 +483,38 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   die(by) {
-    this.appear();
+    if (!this.active) return;
     this.play(DIE);
     this.body.setVelocity(0, 0);
     this.attackable = false;
-    this.disappear();
-    this.onSelectedDeath(this, by);
+    this.onDeath(this, by);
+    this.destroy();
   }
 
   update(_time, delta) {
-    this.lookForTargets();
+    console.log(
+      "entitity",
+      this.kind,
+      "has",
+      this.attackTargets.length,
+      "targets"
+    );
+    if (this.currentTarget?.health <= 0) this.popTarget();
+    if (!this.currentTarget || this.currentTarget.kind === PATH)
+      this.lookForTargets();
     if (this.currentTarget) {
       const distance = this.distanceTo(this.currentTarget);
       if (distance < this.attackRadius + this.currentTarget.hitboxRadius) {
         if (this.currentTarget.kind === PATH) {
           this.popTarget();
         } else {
-          this.attack();
+          if (!this.attacking && this.currentTarget.attackable) this.attack();
         }
       } else {
         this.walkTo(this.currentTarget);
       }
+    } else {
+      this.idle();
     }
   }
 
@@ -563,10 +581,11 @@ class Player {
     }
   }
 
-  onSelectionDeath(killed, killer) {
+  onEntityDeath(killed, killer) {
     if (this.selection === killed) {
       this.select(killer);
     }
+    this.entities = this.entities.filter((e) => e !== killed);
   }
   createPath(scene) {
     const points = pathPoints[this.id % 2];
@@ -583,14 +602,14 @@ class Player {
     // Church
     const church = new Entity(scene, x, y, RESOURCE, "church");
     church.flipX = this.mirror;
-    church.onSelectedDeath = this.onSelectionDeath.bind(this);
+    church.onDeath = this.onEntityDeath.bind(this);
     this.resources.push(church);
     this.entities.push(church);
     // Casino
     y += 0.34;
     const casino = new Entity(scene, x, y, RESOURCE, "casino");
     church.flipX = this.mirror;
-    casino.onSelectedDeath = this.onSelectionDeath.bind(this);
+    casino.onDeath = this.onEntityDeath.bind(this);
     this.resources.push(casino);
     this.entities.push(casino);
   }
@@ -621,7 +640,7 @@ class Player {
       for (const hero of this.heroes) {
         hero.targettable.push(creep);
       }
-      creep.onSelectedDeath = this.onSelectionDeath.bind(this);
+      creep.onDeath = this.onEntityDeath.bind(this);
       this.entities.push(creep);
       currentPower += 1;
       setTimeout(() => {
@@ -637,7 +656,10 @@ class Player {
     let y = 0.33;
     // Range hero
     const rangeHero = new Entity(scene, x, y, HERO, "range_walk");
-    rangeHero.attackRadius = 0.2;
+    rangeHero.visionRadius = 0.4;
+    rangeHero.attackRadius = 0.4;
+    rangeHero.damage = 100;
+    rangeHero.health = 1000;
     rangeHero.walkAnimationPrefix = "range_walk";
     rangeHero.attackAnimationPrefix = "range_attack";
     this.heroes.push(rangeHero);
@@ -717,8 +739,7 @@ class Player {
       y + y_offset,
       cellSide * 34,
       cellSide * 34,
-      this.selection.walkAnimationPrefix,
-      18
+      this.selection.walkAnimationPrefix
     );
     // icon 1
     x_offset += cellSide * 38;
