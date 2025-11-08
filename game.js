@@ -166,6 +166,7 @@ let player1 = null;
 let player2 = null;
 let round = 0;
 let drawnImages = [];
+let enemiesCount = 0;
 
 // Game functions
 function preload() {
@@ -370,8 +371,10 @@ class Entity extends Phaser.GameObjects.Sprite {
   visionRadius = 0.2;
   damage = 1;
   health = 50;
+  maxhealth = 50;
   healthRegeneration = 0;
   mana = 100;
+  maxmana = 100;
   manaRegeneration = 0;
   speed = 40;
   level = 1;
@@ -642,6 +645,7 @@ class Player {
       }
       creep.onDeath = this.onEntityDeath.bind(this);
       this.entities.push(creep);
+      enemiesCount++;
       currentPower += 1;
       setTimeout(() => {
         this.path.forEach((pathEntity) => {
@@ -658,8 +662,9 @@ class Player {
     const rangeHero = new Entity(scene, x, y, HERO, "range_walk");
     rangeHero.visionRadius = 0.3;
     rangeHero.attackRadius = 0.3;
-    rangeHero.damage = 100;
-    rangeHero.health = 1000;
+    rangeHero.damage = 50;
+    rangeHero.health = 100;
+    rangeHero.maxhealth = 100;
     rangeHero.walkAnimationPrefix = "range_walk";
     rangeHero.attackAnimationPrefix = "range_attack";
     rangeHero.player = this;
@@ -668,8 +673,9 @@ class Player {
     // Melee hero
     y += 0.34;
     const meleeHero = new Entity(scene, x, y, HERO, "melee_walk");
-    meleeHero.damage = 100;
-    meleeHero.health = 1000;
+    meleeHero.damage = 50;
+    meleeHero.health = 100;
+    meleeHero.maxhealth = 100;
     meleeHero.walkAnimationPrefix = "melee_walk";
     meleeHero.attackAnimationPrefix = "melee_attack";
     meleeHero.player = this;
@@ -805,10 +811,22 @@ class Player {
     y_offset += cellSide * 12;
     x_offset -= cellSide * 24;
     drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
-    drawRect(0x00ff00, x + x_offset, y + y_offset, cellSide * 17, cellSide * 4);
+    drawRect(
+      0x00ff00,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 34 * (this.selection.health / this.selection.maxhealth),
+      cellSide * 4
+    );
     y_offset += cellSide * 6;
     drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
-    drawRect(0x0000ff, x + x_offset, y + y_offset, cellSide * 17, cellSide * 4);
+    drawRect(
+      0x0000ff,
+      x + x_offset,
+      y + y_offset,
+      cellSide * 34 * (this.selection.mana / this.selection.maxmana),
+      cellSide * 4
+    );
   }
 }
 
