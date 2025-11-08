@@ -250,12 +250,15 @@ function create() {
   // knight
   createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
   createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
+  createAnimations(scene, "melee_walk", ["idle"], 1, 9);
   // archer
   createAnimations(scene, "range_walk", ["up", "left", "down", "right"], 4);
   createAnimations(scene, "range_attack", ["up", "left", "down", "right"], 3);
+  createAnimations(scene, "range_walk", ["idle"], 1, 9);
   // goblin
   createAnimations(scene, "goblin_walk", ["up", "left", "down", "right"], 4);
   createAnimations(scene, "goblin_attack", ["up", "left", "down", "right"], 3);
+  createAnimations(scene, "goblin_walk", ["idle"], 1, 9);
   // entities
   player1 = new Player(1);
   player2 = new Player(2);
@@ -439,14 +442,13 @@ class Entity extends Phaser.GameObjects.Sprite {
 
   walkTo(entity) {
     if (!this.active) return;
-    console.log("entity", this.kind, "walks towards", entity.kind);
     this.scene.physics.moveTo(this, entity.x, entity.y, 40);
     this.play(`${this.walkAnimationPrefix}_${this.getDirection()}`, true);
   }
 
   idle() {
     if (!this.active) return;
-    this.play(IDLE);
+    this.play(`${this.walkAnimationPrefix}_idle`);
     this.body.setVelocity(0, 0);
   }
 
@@ -460,7 +462,6 @@ class Entity extends Phaser.GameObjects.Sprite {
       1
     );
 
-    console.log("attack started by", this.kind);
     this.attacking = true;
     this.play(`${this.attackAnimationPrefix}_${this.getDirection()}`, true);
     setTimeout(() => {
@@ -469,7 +470,6 @@ class Entity extends Phaser.GameObjects.Sprite {
         if (this.currentTarget?.health <= 0) {
           this.popTarget();
         }
-        console.log("attack finished by", this.kind);
       }
       this.attacking = false;
     }, 1000);
@@ -492,13 +492,6 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   update(_time, delta) {
-    console.log(
-      "entitity",
-      this.kind,
-      "has",
-      this.attackTargets.length,
-      "targets"
-    );
     if (this.currentTarget?.health <= 0) this.popTarget();
     if (!this.currentTarget || this.currentTarget.kind === PATH)
       this.lookForTargets();
@@ -656,8 +649,8 @@ class Player {
     let y = 0.33;
     // Range hero
     const rangeHero = new Entity(scene, x, y, HERO, "range_walk");
-    rangeHero.visionRadius = 0.4;
-    rangeHero.attackRadius = 0.4;
+    rangeHero.visionRadius = 0.3;
+    rangeHero.attackRadius = 0.3;
     rangeHero.damage = 100;
     rangeHero.health = 1000;
     rangeHero.walkAnimationPrefix = "range_walk";
@@ -883,13 +876,13 @@ function drawRect(color, x, y, width, height, sprite, frame) {
   }
 }
 
-function createAnimations(scene, prefix, rows, columns) {
+function createAnimations(scene, prefix, rows, columns, offset = 0) {
   rows.forEach((row, i) => {
     scene.anims.create({
       key: `${prefix}_${row}`,
       frames: scene.anims.generateFrameNumbers(prefix, {
-        start: i * columns,
-        end: i * columns + (columns - 1),
+        start: i * columns + offset,
+        end: i * columns + (columns - 1) + offset,
       }),
       frameRate: columns,
       repeat: -1,
