@@ -165,6 +165,7 @@ let graphics;
 let player1 = null;
 let player2 = null;
 let round = 0;
+let drawnImages = [];
 
 // Game functions
 function preload() {
@@ -327,7 +328,7 @@ function update(_time, delta) {
 }
 
 function drawGame() {
-  graphics.clear();
+  clearDrawn();
   player1.placeUI();
   player2.placeUI();
 }
@@ -381,6 +382,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   walkAnimationPrefix = "";
   attackAnimationPrefix = "";
   attacking = false;
+  player = null;
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -484,7 +486,6 @@ class Entity extends Phaser.GameObjects.Sprite {
 
   die(by) {
     if (!this.active) return;
-    this.play(DIE);
     this.body.setVelocity(0, 0);
     this.attackable = false;
     this.onDeath(this, by);
@@ -510,6 +511,9 @@ class Entity extends Phaser.GameObjects.Sprite {
       }
     } else {
       if (this.kind === RESOURCE) return;
+      if (this.kind === HERO) {
+        this.appendTarget(this.player?.path[2]);
+      }
       this.idle();
     }
   }
@@ -658,6 +662,7 @@ class Player {
     rangeHero.health = 1000;
     rangeHero.walkAnimationPrefix = "range_walk";
     rangeHero.attackAnimationPrefix = "range_attack";
+    rangeHero.player = this;
     this.heroes.push(rangeHero);
     this.entities.push(rangeHero);
     // Melee hero
@@ -667,6 +672,7 @@ class Player {
     meleeHero.health = 1000;
     meleeHero.walkAnimationPrefix = "melee_walk";
     meleeHero.attackAnimationPrefix = "melee_attack";
+    meleeHero.player = this;
     this.heroes.push(meleeHero);
     this.entities.push(meleeHero);
   }
@@ -735,7 +741,8 @@ class Player {
       y + y_offset,
       cellSide * 34,
       cellSide * 34,
-      this.selection.walkAnimationPrefix
+      this.selection.anims.currentFrame?.textureKey,
+      this.selection.anims.currentFrame?.textureFrame
     );
     // icon 1
     x_offset += cellSide * 38;
@@ -876,6 +883,7 @@ function drawRect(color, x, y, width, height, sprite, frame) {
   } else {
     const img = scene.add.image(x + w / 2, y + h / 2, sprite, frame);
     img.setDisplaySize(w, h);
+    drawnImages.push(img);
   }
 }
 
@@ -891,4 +899,10 @@ function createAnimations(scene, prefix, rows, columns, offset = 0) {
       repeat: -1,
     });
   });
+}
+
+function clearDrawn() {
+  graphics.clear();
+  drawnImages.forEach((img) => img.destroy());
+  drawnImages = [];
 }
