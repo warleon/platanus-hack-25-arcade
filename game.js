@@ -1398,7 +1398,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       if (this.goldPerSec) {
         gold += this.goldPerSec * dt;
         this.scene?.goldText?.setText(
-          `Gold: ${gold.toFixed(0)} (+${this.goldPerSec.toFixed(1)}/s)`
+          `Oro: ${gold.toFixed(0)} (+${this.goldPerSec.toFixed(1)}/s)`
         );
       }
       return;
@@ -1607,7 +1607,7 @@ class Player {
     let x_offset = cellSide * 2;
     let y_offset = cellSide * 2;
     //BG
-    //drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
+    drawRect(0x20242e, x, y, cellSide * 76, cellSide * 38);
     const selection = this.selection;
     if (!selection || selection.health <= 0) {
       return;
@@ -2274,8 +2274,8 @@ function bindKeys(scene, handler) {
 
 function refreshGoldText() {
   const rate = player1?.base?.goldPerSec || player2?.base?.goldPerSec || 0;
-  scene?.goldText?.setText(`Gold: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`);
-  scene?.roundText?.setText(`Round ${round}`);
+  scene?.goldText?.setText(`Oro: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`);
+  scene?.roundText?.setText(`Ronda ${round}`);
 }
 
 function spendGold(amount) {
