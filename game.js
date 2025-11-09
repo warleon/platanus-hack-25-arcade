@@ -1430,8 +1430,7 @@ class Player {
       x + x_offset,
       y + y_offset,
       cellSide * 10,
-      cellSide * 10,
-      "hit_icon"
+      cellSide * 10
     );
     // icon 5
     x_offset += cellSide * 12;
@@ -1716,7 +1715,13 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
   }
   HORDE_LANES.forEach((lane) => {
     const spawn = lane.spawn;
-    const creep = new Entity(scene, spawn.x, spawn.y, KIND.CREEP, "goblin_walk");
+    const creep = new Entity(
+      scene,
+      spawn.x,
+      spawn.y,
+      KIND.CREEP,
+      "goblin_walk"
+    );
     creep.walkAnimationPrefix = "goblin_walk";
     creep.attackAnimationPrefix = "goblin_attack";
     const roundMultiplier = Math.pow(1.2, Math.max(0, round - 1));
