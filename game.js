@@ -153,6 +153,7 @@ let roundStarting = false;
 let controllerMode = { P1: true, P2: true };
 let defenderUnits = [];
 let castleWaypoints = [];
+let neutralEntities = [];
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -680,6 +681,7 @@ class MainScene extends Phaser.Scene {
     scene = this;
     placeBackground(this);
     graphics = this.add.graphics();
+    neutralEntities = [];
     const base = createBase();
     this.baseEntity = base;
     this.castleWaypoints = createCastleWaypoints(scene);
@@ -730,6 +732,7 @@ class MainScene extends Phaser.Scene {
       this.pauseMenu = null;
       graphics?.destroy();
       graphics = null;
+      neutralEntities = [];
       drawnImages = [];
       player1 = null;
       player2 = null;
@@ -754,6 +757,13 @@ class MainScene extends Phaser.Scene {
         entity.update(_time, delta);
       });
     }
+    neutralEntities = neutralEntities.filter((entity) => {
+      if (!entity || !entity.active) {
+        return false;
+      }
+      entity.update(_time, delta);
+      return true;
+    });
     drawGame();
     if (enemiesCount <= 0 && !roundStarting) {
       roundStarting = true;
@@ -761,6 +771,7 @@ class MainScene extends Phaser.Scene {
       enemiesCount = 0;
       this.time.delayedCall(4000, () => {
         if (!this.gameEnded) {
+          resetDefenders(this.defenders);
           spawnEnemyWave(
             this,
             this.defenders,
@@ -964,13 +975,19 @@ class MainScene extends Phaser.Scene {
     }
     let banner = null;
     if (message) {
-      banner = centeredText(this, config.width / 2, config.height / 2, message, {
-        fontSize: "40px",
-        color: "#ff7676",
-        fontStyle: "bold",
-        backgroundColor: "#000000aa",
-        padding: { x: 16, y: 8 },
-      });
+      banner = centeredText(
+        this,
+        config.width / 2,
+        config.height / 2,
+        message,
+        {
+          fontSize: "40px",
+          color: "#ff7676",
+          fontStyle: "bold",
+          backgroundColor: "#000000aa",
+          padding: { x: 16, y: 8 },
+        }
+      );
     }
     this.time.delayedCall(message ? 1500 : 200, () => {
       banner?.destroy();
@@ -1191,6 +1208,16 @@ class Entity extends Phaser.GameObjects.Sprite {
         }
       } else {
         this.walkTo(this.currentTarget);
+      }
+    } else if (this.kind === HERO && this.home) {
+      const dx = this.home.x - this.x;
+      const dy = this.home.y - this.y;
+      const distanceSq = dx * dx + dy * dy;
+      if (distanceSq > 25) {
+        this.scene.physics.moveTo(this, this.home.x, this.home.y, 40);
+        this.play(`${this.walkAnimationPrefix}_${this.getDirection()}`, true);
+      } else {
+        this.idle();
       }
     } else {
       this.idle();
@@ -1587,10 +1614,11 @@ function createHeroUnit(scene, position, type) {
     type === "range" ? "range_attack" : "melee_attack";
   hero.damage = type === "range" ? 40 : 60;
   hero.health = hero.maxhealth = type === "range" ? 80 : 120;
-  hero.attackRadius = type === "range" ? 0.25 : 0.08;
-  hero.visionRadius = type === "range" ? 0.4 : 0.2;
+  hero.attackRadius = type === "range" ? 0.2 : 0.08;
+  hero.visionRadius = type === "range" ? 0.25 : 0.15;
   hero.hitboxRadius = 0.02;
   hero.attackable = true;
+  hero.home = { x: hero.x, y: hero.y };
   return hero;
 }
 
@@ -1598,14 +1626,15 @@ function createDefenderFormation(scene) {
   const defenders = [];
   const center = new Phaser.Math.Vector2(0.5, 0.5);
   HORDE_LANES.forEach((lane) => {
-    const direction = new Phaser.Math.Vector2(
-      lane.spawn.x,
-      lane.spawn.y
-    )
+    const direction = new Phaser.Math.Vector2(lane.spawn.x, lane.spawn.y)
       .subtract(center)
       .normalize();
-    const rangePos = clampToArena(center.clone().add(direction.clone().scale(0.18)));
-    const meleePos = clampToArena(center.clone().add(direction.clone().scale(0.32)));
+    const rangePos = clampToArena(
+      center.clone().add(direction.clone().scale(0.18))
+    );
+    const meleePos = clampToArena(
+      center.clone().add(direction.clone().scale(0.32))
+    );
     defenders.push(
       createHeroUnit(scene, rangePos, "range"),
       createHeroUnit(scene, meleePos, "melee")
@@ -1693,8 +1722,22 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
           hero.targettable.splice(idx, 1);
         }
       });
+      neutralEntities = neutralEntities.filter((entity) => entity !== creep);
     };
+    neutralEntities.push(creep);
     enemiesCount++;
+  });
+}
+
+function resetDefenders(defenders) {
+  defenders.forEach((hero) => {
+    if (!hero || !hero.home) {
+      return;
+    }
+    hero.pathTargets = [];
+    hero.attackTargets = [];
+    hero.currentTarget = null;
+    hero.attacking = false;
   });
 }
 
