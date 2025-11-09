@@ -261,7 +261,7 @@ class StartScene extends Phaser.Scene {
       this,
       config.width / 2,
       150,
-      "Presiona ambos botones de inicio para jugar de a 2, presiona un solo botón de inicio para jugar solo en ese lado del arcade",
+      "Presiona ambos botones de INICIO para 2 jugadores, presiona un solo botón de INICIO dos veces para 1 jugador",
       {
         fontSize: "20px",
         color: "#d0d0d0",
@@ -406,6 +406,26 @@ class StartScene extends Phaser.Scene {
       fontSize: "18px",
       color: "#ffff00",
     });
+    const InstructionJoystic = centeredText(
+      this,
+      joystickX,
+      100,
+      "Seleccionar Unidad",
+      {
+        fontSize: "12px",
+        color: "#6fb1ff",
+      }
+    );
+    const InstructionButtons = centeredText(
+      this,
+      buttonStartX + 45,
+      100,
+      "Realizar Acción",
+      {
+        fontSize: "12px",
+        color: "#6fb1ff",
+      }
+    );
 
     const title = centeredText(this, 0, -145, label, {
       fontSize: "22px",
@@ -417,6 +437,8 @@ class StartScene extends Phaser.Scene {
     container.add(startLabel);
     container.add(letter);
     container.add(title);
+    container.add(InstructionJoystic);
+    container.add(InstructionButtons);
     this.startButtons[key] = startButton;
   }
 
@@ -1090,7 +1112,7 @@ class MainScene extends Phaser.Scene {
   }
 
   handleCastleDestroyed() {
-    this.concludeRun("Castle Destroyed!");
+    this.concludeRun("¡El casillo fue destruido!");
   }
 }
 
