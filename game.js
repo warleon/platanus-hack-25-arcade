@@ -274,7 +274,7 @@ class StartScene extends Phaser.Scene {
     this.bestRunText = centeredText(
       this,
       config.width / 2,
-      config.height - 110,
+      config.height - 100,
       this.getBestLabel(),
       {
         fontSize: "22px",
@@ -285,7 +285,7 @@ class StartScene extends Phaser.Scene {
     this.statusText = centeredText(
       this,
       config.width / 2,
-      config.height - 60,
+      config.height - 40,
       "Esperando por jugadores...",
       {
         fontSize: "22px",
@@ -300,7 +300,7 @@ class StartScene extends Phaser.Scene {
   getBestLabel() {
     const best = getBestRun();
     if (!best) {
-      return "Top Team: No runs recorded yet.";
+      return "Mejor Partida: ninguna.\nSean los primeros.";
     }
     const names = [];
     if (best.p1Name) {
@@ -2052,7 +2052,7 @@ function renderButtonCost(slotX, slotY, cellSide, cost) {
         : "#ff6666"
       : "#aaaaaa";
   const text = scene.add
-    .text(centerX, slotY - 6, label, {
+    .text(centerX, slotY - 1, label, {
       fontSize: "10px",
       color,
       fontFamily: "monospace",
