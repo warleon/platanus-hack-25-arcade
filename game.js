@@ -312,8 +312,8 @@ class StartScene extends Phaser.Scene {
     const namePart =
       names.length > 1
         ? `${names[0]} & ${names[1]}`
-        : names[0] || "Unknown Heroes";
-    return `Top Team: ${namePart} - Round ${best.round}`;
+        : names[0] || "Heroes desconocidos";
+    return `Mejor Partida: ${namePart} - Ronda ${best.round}`;
   }
 
   createControllerDisplays() {
