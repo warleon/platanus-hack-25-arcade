@@ -57,6 +57,17 @@ const DIRECTIONS = {
   downRight: { x: 1, y: 1 },
 };
 
+const ARCADE_DIRECTIONS = {
+  U: DIRECTIONS.up,
+  D: DIRECTIONS.down,
+  L: DIRECTIONS.left,
+  R: DIRECTIONS.right,
+  UL: DIRECTIONS.upLeft,
+  UR: DIRECTIONS.upRight,
+  DL: DIRECTIONS.downLeft,
+  DR: DIRECTIONS.downRight,
+};
+
 const CASTLE =
   "data:image/webp;base64,UklGRt4CAABXRUJQVlA4TNICAAAvK8AKEGegJpIk5Rjii07Ax+xf2CtRU9tqw8hhrgogRUD3P0RNJKiJJLf5TjlUgiAG4o/FNFzNfwDA6Lc4GBBFgPgqgd9ob0nqj2f+8+6CXPf/27j5p/dEdJMPntLbFj+BE7nBU4pc0t3LFAYHkMJNLgBJcLoCSASnFNtJNqUdhX+eTuJdXiGi/wrbtm1k1BltfQgABNBP/fKWT/yHT15e8HLkPzUe8eph3L8sb1R5wfzRxnDfOr8xPwzw/jBefwFIkOAlvPRv+fDlRgwQHE3Gd0ARRcx5c8GSl88mR0oOf2yQTFtpsFv8zsTy0cZAySihQ0LyAyGFEDJthDQs6XIRsj5KXcKHSpCx8Df6cpglUVRZquRdjtrH3cPadGX2Ixdd6/foXDrDzwGAwAn0VFjUWst8okJpitYD0SLqnFYYpN4zaZ0X65tk1O81elB62lv3wRaoe4xL74lGTxp3vfUoTihrEC1W35zMvaDlPz3fvHiN+UrF0xEqe47WqDV5eRYgmI8nELWzTqNDRLu8EQPM78zHWYHOswzdq8Mf82c+bfzYiP9omemekJc/4o14+Wh9fj53iM7D4uHLnfl5WC7f/XRjY5jbfAw1kvmX88NQPCWMNGvEEEJrTUV2w3g4hMwodqB5w/7GA64UUhQ8BOOSeidLTWLSRJnUNBuSlfZQsUfjT8bHx7130V5RS0KgNRUx2VVCo5RS8rRb46chDzmrMy75XJRxxoWYG+XngJqkzozJZlvYNsakIjUlTZtMi9Gm2a/tula6qxpFyk8DzZL6QY2aXUJoi++qNM1mSktmptlsWzXJ9WYz7RjWsKy0ZKbOFJf0+o3dXZkJwcz0OUgLNV2Xku1ejyiVStYLw4dgVvOISj5drWmdsXZHTg8BbyhGCCE3u4pcv/H45p4xLIQPyUwIAEEzivZOA0CQcXYCgBCoyAv8XQEBOQG9ClqEeAYAAA==";
 const HEALING_ICON =
@@ -70,6 +81,18 @@ const THUNDER_ICON =
 
 const RADIAL_ICON =
   "data:image/webp;base64,UklGRvABAABXRUJQVlA4TOQBAAAvH8AHAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNkrRtchoHxjnTLWevaF3AotAJVO1ZzzMN3iYG52x36WE1K4R8AauYrVOjjXNQXc+PzxDR/wmIogvRf345EpnEGK3MZDIyRmt9LTU61UkGAKPUpNqoU6nRKQAAjI3RyqRGxQC7mANcSrXWSqcZ7CIWU8hirYzWCsaI1jmAsVImvT0BRFciIoCKVJzlM0REhziFkVIZACK6vQIxH42VBrCuwjd005aIuZrADNEVVJO16OBQBrPKoq/JbxcWp9cALDrnieietS6HnQqx+Ei0ILqBOM3hvcXCU9vNaRt/lfkDxKoiWnE3J1thfrtwBVG7Yp5TaavzM2c9fWxD6Duiop7u4T0ivwp9WHoqSyyw9vcWHPqBie7VV388Ilq0PHDo73uq35atv9euAm965nt0rzns6V7H/SBrZqqpOVzfW3TMG5Gel56ah+3vruMgIgdhef9j8+LF/DP/Y+iXXd08v9WtOPyVRNYcNnHz4iG94yCnki8i/PfipevNzp/1X/kafZE+DB/3L8Ynet6IRCIHQ/Ank3v7GxE5JV9ERLqH";
+
+const ANIMATION_BATCHES = [
+  ["melee_walk", ["up", "left", "down", "right"], 4],
+  ["melee_attack", ["up", "left", "down", "right"], 3],
+  ["melee_walk", ["idle"], 1, 9],
+  ["range_walk", ["up", "left", "down", "right"], 4],
+  ["range_attack", ["up", "left", "down", "right"], 3],
+  ["range_walk", ["idle"], 1, 9],
+  ["goblin_walk", ["up", "left", "down", "right"], 4],
+  ["goblin_attack", ["up", "left", "down", "right"], 3],
+  ["goblin_walk", ["idle"], 1, 9],
+];
 
 const MELEE_WALK =
   "data:image/webp;base64,UklGRqoEAABXRUJQVlA4TJ0EAAAvV8AZEBcgJEgx3eEKBJIEVp9ZIJBksPPk8x9Q/cGSs+1xI0kvhaSA8Kqqu2VA2vUcEadgz8OKCYhCS6seLCPFU7iq514xC5YBe+UEJCP4HzPIGNAniOi/A7eRFMm9cLAQ7f6CV8fw6nwA0MBBZQ5Z2QAc6qTM1m8KYBEFa2J6gPWcPInGSA+EiwYjfRKlfDYpWC5lMulX+ES2iU9EtljxxQtWfJltqhdW+dkLlnnQ2DgoWLNNHO64lq3TGOcUtL4C49wG40c3YruM06SEOzievbDESw3OOVKChrCKV3FYa4yXsyJLwK7SqVV8RRA5KWbxNfx59SflZF8pe5PuMykBrrOfVR8HKe0opwsuDj/9kHNxqFSYZS7o4xA3XAd3U/3aPWKdXws+rd3DB0ycOz4NY00YnQMzjI/AFEqMn+Bwm0swPnuDvXlWtcDyueRFgqlMhWl2wPEXJdC0CsyDaRL1gql3CqgzTwqWX2zJcl8MugXsoUl4/4Q3GG1URvFUAEQFLN6UGM2hMJctYE4lEL3asHhMeZAGCLEBzqJqoldsggzANTEi+j4dSn3NLDKAcZPepUO5v/ouu34HB+n0NR3KbpEJePJ94ovwjXSaazt3QDs//gDjfHH4VnxBWP1D9qV+UkYc5rfu2eG7oUouOjQ4p/ijONKpe8C4hqj6c0ntnIL/iQeCTIQmXkru06H0MmQcxLjX7NKhfJI18T2E2JVc476Cox+Bo38EkhC7mtD7CY4iNbCsms+xawgf3cRRulUDdlVmuLkajDwcZBtuyfEGv+iqRzCn0lRYVwJPW2CtaqC/A8IvtsCfeqCtAFwJZqAHrAN2SRgaoGcE2hGMc9m7qwF72ALHDugT/qx5Y1rH+ydk7t5MiA0QRL2RYGQAFtFvJATxQJTy/5QwZPQbCX+WQcFNqlcTslwFUbZvJbgxe7rl6wnWZrmrVGCzn1fRhNN6KjG9n+CcEkJKML6LDWGaRXHu4iZLgHiTirCKUziRBruKKE7ej9gog2KWS4WN0iv+FbuaP0eZFRe51FyjnBXDxTeERaLCy/DsJrPCT7HhOu9T2NQ9m/cptzvXXMfZw7GbG8zoouI4OE24zT+DcJIN7KKA1Q5ovziwsi1g8T+F8IsbcJxucKiqZ+3HH0LQi3o2dGDLvoSd3cOxPCqYThVYPQHT5xIWnbQ2MwLrLzRYLPCV0WDUV0BLNhjeN+FVhdUAVnHluskSNIdiaQBiw47VAywNQcU9YKLnnihZ2J6riaLAiKd+kRBF7TJYEbV5VuTuzeSSyf2iNGNmcqo2s5RgZ/m2MBcpIR27MZIconynzOo0GJHfllmCPUT3BYZss7p/FjgpmXAygosKcHJSpncqNMa5e8zeAaZ3XwjeEVXYjzVGBNKxO6xIaLA3v8keLFiRe+zso8KefYk5ZWZfE06+gTB7hRlEw3X2d4TOq8wFzpNoFudrZfoJCMMlwOJW0Us7nQp8BRy6ETjeWP3i5kLRNwDrAzAdwV0/TgrafaYCU18VYCtgcQBTDba0DdA+AK0GqCaw21AmTsFUAfTnAjMZBbhJwdwBzIpssg3ZAAA=";
@@ -88,27 +111,6 @@ const GOBLIN_WALK =
 const GOBLIN_ATTACK =
   "data:image/webp;base64,UklGRm4FAABXRUJQVlA4TGEFAAAvXMAdECegkG0EOHQvw/kcmbRNa6f25n6XmrYNWJyzBOb8B8DUZj+wg/fatvLWtraty3IAcHAAWtMKQLgRgKbo+Qe1Cwx5na/fEf134LZtGNG7+tz+RP8T+eyx00Oe3zvsR8RD/uo77bm2z/STzuhLsNwcDm6b/YJF0ulZpRH543lutrsrDUk6n5I2PwRx0e1noBnG0lPSZd9JfIKHbnsNnJJsP2+9u9voY/s5mtLdAChllCt8gofuBkApk8svIKoK8PE61tZfQFhHH7+pJQCu6UGf8Ztb+vhVgTw7AJY+TmkrFciBrXegeBqiAuXYl+n7bVC8aE4ar9dRagCNPj3r5voLB2Pew/GVowDUMqqjrClpUBTkXCuQXpMCoCDpVW9aR7nCg3yLCjxCdNufWel2i/3aLZTett3WmW+Iy3ZIm98/fmpMqra9RDaXP37eeMhTS7/W4UfsIe+hA6kWTfldtcUqUi+hilSZHCxKhIMiVWJNqm3WFyXW0EuqLZSylJZJYlHqobRItejvkvX/JT+Pv5TyErvsyPmUUl5iNEKb7agsiUbcQFhXYG4grANYo87ZLeqndADr9xKtrEFbX6jE8wOMPavczNxjFVjirdxv/HYgeImdg98OfH19wjRHX13H+3p1KPO2JNWbrdTpr0lya/eODu1utAn8RtdndPSojgzMClBuJPLNw0GbbZXi2l/ztpQqdGqJrqHM41ELlRaw+tCVQO7RkMjzw2nbTxfRScwP2x+7vgKVRl9n+7Uv6m65Tzb/2HUNHEAtweGn5O48jcv71rwrSKKVg8hjMP2/7Ke4WmSz91CTVN9tdNp+iEyouR3ReEuqK+ug202VzBIelyXNVulgrUWSNttv5UxI/LQl0B5Syhmm3R6SclaUurIG3hqSsyRd9lu3OVhr0ZChw1z/9L2UM4wObn46eOur5Kxv86P/kmyPv5DzN+xJpdw5aOWLtsdKdNYbFbh32s/BAbcFsPynXfb+rYXWWeIvdFRaI9906y2qBJI8jURvZg1V3CFoOiWiCrCEEsAaNgweg4TvrlOFkm/1WQVqfPQCeLi+oSGm08Pr1AH6NFPFjarL+7QBYkD4QLcp+niN1NAxKpNKh0XH9HIAnfD6XGmdPEt0inSOW0eBEjtK7Y0UHBVYdT4n2D8oysFlu74mnU5vyzm+6Oi+Shmck27b05EYcz005s/V+j7wWNnvz7Uvo2OQuaZDlz3yc5T8uPyYXwrQlN6T03Yrkjy1Epf3dbYCRcpT2+5Gp+fWcdkUjemF3l+aczqIplx2gwnFduSy291vs/3+bfOozW6Bqee7sb0qyGldnm23PW1FuXZdwbF197uf7lqsqiUYfWxF6Td9sKiyzH5s+6kwV4u7suiM6Lz9aXvoP5yfx9/J+c5mP0MpL9IZOLi5lk7b4Y9WJD1nFcqtuA5AkmcAd6O/8m+gAot0DvUdfeg87k1VAZYbCVjCzSrJ/9SolzsH8J4k6OUpyWMd0PsX6BFa4IvraVPmhwp9kXTO8+Z60vJzkoE1kkxHNwHa67WMw/y+FgXzaHdjun7XMjgatawhKDU0zcKoQqmMnqN2e3Ro8DvodKAsOicvKHfdAJZteKECR/+XbHs8elnuX/J4p4NEe+m9n5PUfr3/idVCY51t9q7kfSJ+vV97iAIso8ThtkuX7fFhc9s3+xG8sNDRnNPXLp2eHf6scvSllrtb4PBnlbZIqasu28HIbg7UUldJfVZLZTlsr8FVjLWySJ8AJS9bt/fZ0Y8yS5DzIh2zlBdJn3DWUtfgyFnSOHcF2br9mB/WyqLbHDf0CSRI+Qv68AhtMI+c9W+Itof+AwEA";
 // path points
-const pathPoints = [
-  [
-    //player 2
-    { x: 0.55, y: 1.1 },
-    { x: 0.55, y: 0.6 },
-    { x: 0.8, y: 0.6 },
-    { x: 0.8, y: 0.4 },
-    { x: 0.55, y: 0.4 },
-    { x: 0.55, y: -0.1 },
-  ],
-  [
-    // player 1
-    { x: 0.45, y: 1.1 },
-    { x: 0.45, y: 0.6 },
-    { x: 0.2, y: 0.6 },
-    { x: 0.2, y: 0.4 },
-    { x: 0.45, y: 0.4 },
-    { x: 0.45, y: -0.1 },
-  ],
-];
-
 const CASTLE_CORNERS = [
   { x: 0.45, y: 0.45 },
   { x: 0.55, y: 0.45 },
@@ -208,43 +210,48 @@ class StartScene extends Phaser.Scene {
     this.startCounts = { P1: 0, P2: 0 };
     this.gameStarted = false;
     placeBackground(this);
-    this.add
-      .text(config.width / 2, 70, "Arcade Briefing", {
-        fontSize: "36px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    centeredText(this, config.width / 2, 70, "Arcade Briefing", {
+      fontSize: "36px",
+      color: "#ffffff",
+      fontStyle: "bold",
+    });
 
-    this.add
-      .text(
-        config.width / 2,
-        150,
-        "Press both START buttons once to begin in 2P mode.\nDouble tap the same START button to play solo on that side.\nP1 START = S or Space | P2 START = 5 or 0",
-        {
-          fontSize: "20px",
-          color: "#d0d0d0",
-          align: "center",
-          wordWrap: { width: config.width - 80 },
-        }
-      )
-      .setOrigin(0.5);
+    centeredText(
+      this,
+      config.width / 2,
+      150,
+      "Press both START buttons once to begin in 2P mode.\nDouble tap the same START button to play solo on that side.\nP1 START = S or Space | P2 START = 5 or 0",
+      {
+        fontSize: "20px",
+        color: "#d0d0d0",
+        align: "center",
+        wordWrap: { width: config.width - 80 },
+      }
+    );
 
     this.createControllerDisplays();
-    this.bestRunText = this.add
-      .text(config.width / 2, config.height - 110, this.getBestLabel(), {
+    this.bestRunText = centeredText(
+      this,
+      config.width / 2,
+      config.height - 110,
+      this.getBestLabel(),
+      {
         fontSize: "22px",
         color: "#80ff80",
         align: "center",
-      })
-      .setOrigin(0.5);
-    this.statusText = this.add
-      .text(config.width / 2, config.height - 60, "Waiting for players...", {
+      }
+    );
+    this.statusText = centeredText(
+      this,
+      config.width / 2,
+      config.height - 60,
+      "Waiting for players...",
+      {
         fontSize: "22px",
         color: "#ffff00",
         align: "center",
-      })
-      .setOrigin(0.5);
+      }
+    );
 
     this.input.keyboard.on("keydown", this.handleKey, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -311,20 +318,16 @@ class StartScene extends Phaser.Scene {
     const startButton = this.add
       .circle(startX, startY, 24, 0x333333)
       .setStrokeStyle(2, 0xffff00);
-    const startLabel = this.add
-      .text(startX, startY + 35, "START", {
-        fontSize: "18px",
-        color: "#ffff00",
-      })
-      .setOrigin(0.5);
+    const startLabel = centeredText(this, startX, startY + 35, "START", {
+      fontSize: "18px",
+      color: "#ffff00",
+    });
 
-    const title = this.add
-      .text(0, -145, label, {
-        fontSize: "22px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    const title = centeredText(this, 0, -145, label, {
+      fontSize: "22px",
+      color: "#ffffff",
+      fontStyle: "bold",
+    });
 
     container.add(startButton);
     container.add(startLabel);
@@ -434,45 +437,50 @@ class EndScene extends Phaser.Scene {
 
   create() {
     placeBackground(this);
-    this.add
-      .text(config.width / 2, 80, "Record Your Team", {
-        fontSize: "38px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    centeredText(this, config.width / 2, 80, "Record Your Team", {
+      fontSize: "38px",
+      color: "#ffffff",
+      fontStyle: "bold",
+    });
 
-    this.add
-      .text(config.width / 2, 140, `Round Reached: ${this.roundAchieved}`, {
+    centeredText(
+      this,
+      config.width / 2,
+      140,
+      `Round Reached: ${this.roundAchieved}`,
+      {
         fontSize: "26px",
         color: "#ffd966",
-      })
-      .setOrigin(0.5);
+      }
+    );
 
-    this.add
-      .text(
-        config.width / 2,
-        190,
-        "Use your joystick to move the cursor.\nUp/Down change letters, Left/Right move slots.\nPress START to confirm and save.",
-        {
-          fontSize: "20px",
-          color: "#d0d0d0",
-          align: "center",
-        }
-      )
-      .setOrigin(0.5);
+    centeredText(
+      this,
+      config.width / 2,
+      190,
+      "Use your joystick to move the cursor.\nUp/Down change letters, Left/Right move slots.\nPress START to confirm and save.",
+      {
+        fontSize: "20px",
+        color: "#d0d0d0",
+        align: "center",
+      }
+    );
 
     this.nameEntries = {
       P1: this.createNameEntry(220, "PLAYER ONE", this.controllers.P1),
       P2: this.createNameEntry(580, "PLAYER TWO", this.controllers.P2),
     };
 
-    this.statusText = this.add
-      .text(config.width / 2, config.height - 60, "Press START to save.", {
+    this.statusText = centeredText(
+      this,
+      config.width / 2,
+      config.height - 60,
+      "Press START to save.",
+      {
         fontSize: "22px",
         color: "#80ff80",
-      })
-      .setOrigin(0.5);
+      }
+    );
 
     this.input.keyboard.on("keydown", this.handleKey, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -485,29 +493,23 @@ class EndScene extends Phaser.Scene {
     this.add
       .rectangle(x, 340, 320, 220, 0x050505, 0.85)
       .setStrokeStyle(2, enabled ? 0xffffff : 0x555555);
-    this.add
-      .text(x, 240, label, {
-        fontSize: "22px",
-        color: "#ffffff",
-      })
-      .setOrigin(0.5);
-    this.add
-      .text(x, 260, enabled ? "Active" : "Not participating", {
-        fontSize: "16px",
-        color: enabled ? "#00ffea" : "#888888",
-      })
-      .setOrigin(0.5);
+    centeredText(this, x, 240, label, {
+      fontSize: "22px",
+      color: "#ffffff",
+    });
+    centeredText(this, x, 260, enabled ? "Active" : "Not participating", {
+      fontSize: "16px",
+      color: enabled ? "#00ffea" : "#888888",
+    });
     const letters = Array(NAME_LEN).fill("A");
     if (!enabled) {
       letters.fill("-");
     }
-    const nameText = this.add
-      .text(x, 330, letters.join(""), {
-        fontFamily: "monospace",
-        fontSize: "34px",
-        color: "#ffffff",
-      })
-      .setOrigin(0.5);
+    const nameText = centeredText(this, x, 330, letters.join(""), {
+      fontFamily: "monospace",
+      fontSize: "34px",
+      color: "#ffffff",
+    });
     const pointer = this.add
       .triangle(x, 360, 0, 0, 14, 0, 7, -18, 0xffff00, 1)
       .setOrigin(0.5, 0)
@@ -693,20 +695,7 @@ class MainScene extends Phaser.Scene {
     ];
     this.gameEnded = false;
 
-    createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
-    createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
-    createAnimations(scene, "melee_walk", ["idle"], 1, 9);
-    createAnimations(scene, "range_walk", ["up", "left", "down", "right"], 4);
-    createAnimations(scene, "range_attack", ["up", "left", "down", "right"], 3);
-    createAnimations(scene, "range_walk", ["idle"], 1, 9);
-    createAnimations(scene, "goblin_walk", ["up", "left", "down", "right"], 4);
-    createAnimations(
-      scene,
-      "goblin_attack",
-      ["up", "left", "down", "right"],
-      3
-    );
-    createAnimations(scene, "goblin_walk", ["idle"], 1, 9);
+    initAnimations(scene);
 
     player1 = new Player(1);
     player2 = new Player(2);
@@ -721,13 +710,17 @@ class MainScene extends Phaser.Scene {
 
     if (!controllerMode.P1 || !controllerMode.P2) {
       const soloSide = controllerMode.P1 ? "PLAYER ONE" : "PLAYER TWO";
-      this.add
-        .text(config.width / 2, 24, `Solo Mode - ${soloSide} controls`, {
+      centeredText(
+        this,
+        config.width / 2,
+        24,
+        `Solo Mode - ${soloSide} controls`,
+        {
           fontSize: "20px",
           color: "#ffff88",
           align: "center",
-        })
-        .setOrigin(0.5);
+        }
+      );
     }
 
     this.input.keyboard.on("keydown", this.handleArcadeInput, this);
@@ -819,17 +812,7 @@ class MainScene extends Phaser.Scene {
     ) {
       return;
     }
-    const directionVectors = {
-      U: DIRECTIONS.up,
-      D: DIRECTIONS.down,
-      L: DIRECTIONS.left,
-      R: DIRECTIONS.right,
-      UL: DIRECTIONS.upLeft,
-      UR: DIRECTIONS.upRight,
-      DL: DIRECTIONS.downLeft,
-      DR: DIRECTIONS.downRight,
-    };
-    const direction = directionVectors[directionKey];
+    const direction = ARCADE_DIRECTIONS[directionKey];
 
     if (!direction) {
       return;
@@ -860,30 +843,37 @@ class MainScene extends Phaser.Scene {
     const panel = this.add
       .rectangle(config.width / 2, config.height / 2, 420, 280, 0x111111, 0.95)
       .setStrokeStyle(2, 0xffffff);
-    const title = this.add
-      .text(config.width / 2, config.height / 2 - 110, "Game Paused", {
+    const title = centeredText(
+      this,
+      config.width / 2,
+      config.height / 2 - 110,
+      "Game Paused",
+      {
         fontSize: "32px",
         color: "#ffffff",
         fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    const help = this.add
-      .text(
-        config.width / 2,
-        config.height / 2 - 70,
-        "Use joystick to move • Press START to choose",
-        { fontSize: "18px", color: "#dddddd" }
-      )
-      .setOrigin(0.5);
+      }
+    );
+    const help = centeredText(
+      this,
+      config.width / 2,
+      config.height / 2 - 70,
+      "Use joystick to move / Press START to choose",
+      { fontSize: "18px", color: "#dddddd" }
+    );
 
-    this.pauseOptionTexts = this.pauseOptionLabels.map((label, index) => {
-      return this.add
-        .text(config.width / 2, config.height / 2 - 10 + index * 60, label, {
+    this.pauseOptionTexts = this.pauseOptionLabels.map((label, index) =>
+      centeredText(
+        this,
+        config.width / 2,
+        config.height / 2 - 10 + index * 60,
+        label,
+        {
           fontSize: "22px",
           color: "#ffffff",
-        })
-        .setOrigin(0.5);
-    });
+        }
+      )
+    );
 
     this.pauseMenu = this.add.container(0, 0, [
       overlay,
@@ -974,15 +964,13 @@ class MainScene extends Phaser.Scene {
     }
     let banner = null;
     if (message) {
-      banner = this.add
-        .text(config.width / 2, config.height / 2, message, {
-          fontSize: "40px",
-          color: "#ff7676",
-          fontStyle: "bold",
-          backgroundColor: "#000000aa",
-          padding: { x: 16, y: 8 },
-        })
-        .setOrigin(0.5);
+      banner = centeredText(this, config.width / 2, config.height / 2, message, {
+        fontSize: "40px",
+        color: "#ff7676",
+        fontStyle: "bold",
+        backgroundColor: "#000000aa",
+        padding: { x: 16, y: 8 },
+      });
     }
     this.time.delayedCall(message ? 1500 : 200, () => {
       banner?.destroy();
@@ -1256,9 +1244,6 @@ class Player {
     this.luck = 0;
     this.base = null;
     this.entities = []; // all the entities this player can select
-    this.path = [];
-    this.creepPower = 10;
-
     this.mirror = id % 2;
     this.tint = id % 2 ? 0x00ff00 : 0x0000ff;
     this.players = [this];
@@ -1296,71 +1281,6 @@ class Player {
     }
   }
 
-  createPath(scene) {
-    const points = pathPoints[this.id % 2];
-    points.forEach((point) => {
-      const pathEntity = new Entity(scene, point.x, point.y, PATH, "");
-      pathEntity.disappear();
-      this.path.push(pathEntity);
-    });
-  }
-
-  createEnemies(scene) {
-    let currentPower = 0;
-    let i = 0;
-    while (currentPower < this.creepPower) {
-      const creep = new Entity(
-        scene,
-        this.path[0].x / config.width,
-        this.path[0].y / config.height,
-        CREEP,
-        "goblin_walk"
-      );
-      creep.walkAnimationPrefix = "goblin_walk";
-      creep.attackAnimationPrefix = "goblin_attack";
-      creep.targettable.push(...this.heroes);
-      for (const hero of this.heroes) {
-        hero.targettable.push(creep);
-      }
-      creep.onDeath = this.onEntityDeath.bind(this);
-      this.entities.push(creep);
-      enemiesCount++;
-      currentPower += 1;
-      setTimeout(() => {
-        this.path.forEach((pathEntity) => {
-          creep.appendTarget(pathEntity);
-        });
-      }, i * 1000);
-      i++;
-    }
-  }
-  createHeroes(scene) {
-    const x = 0.8 - this.mirror * 0.6;
-    let y = 0.33;
-    // Range hero
-    const rangeHero = new Entity(scene, x, y, HERO, "range_walk");
-    rangeHero.visionRadius = 0.3;
-    rangeHero.attackRadius = 0.3;
-    rangeHero.damage = 50;
-    rangeHero.health = 100;
-    rangeHero.maxhealth = 100;
-    rangeHero.walkAnimationPrefix = "range_walk";
-    rangeHero.attackAnimationPrefix = "range_attack";
-    rangeHero.player = this;
-    this.heroes.push(rangeHero);
-    this.entities.push(rangeHero);
-    // Melee hero
-    y += 0.34;
-    const meleeHero = new Entity(scene, x, y, HERO, "melee_walk");
-    meleeHero.damage = 50;
-    meleeHero.health = 100;
-    meleeHero.maxhealth = 100;
-    meleeHero.walkAnimationPrefix = "melee_walk";
-    meleeHero.attackAnimationPrefix = "melee_attack";
-    meleeHero.player = this;
-    this.heroes.push(meleeHero);
-    this.entities.push(meleeHero);
-  }
   // 1-2-3
   // 4-5-6
   onPress(button) {
@@ -1599,6 +1519,12 @@ function createAnimations(scene, prefix, rows, columns, offset = 0) {
   });
 }
 
+function initAnimations(scene) {
+  ANIMATION_BATCHES.forEach((def) =>
+    createAnimations(scene, def[0], def[1], def[2], def[3] || 0)
+  );
+}
+
 function clearDrawn() {
   graphics.clear();
   drawnImages.forEach((img) => img.destroy());
@@ -1642,6 +1568,10 @@ function placeBackground(targetScene) {
     .setDepth(-10);
 }
 
+function centeredText(scene, x, y, text, style) {
+  return scene.add.text(x, y, text, style).setOrigin(0.5);
+}
+
 function clampToArena(vec) {
   return new Phaser.Math.Vector2(
     Phaser.Math.Clamp(vec.x, 0.08, 0.92),
@@ -1666,16 +1596,16 @@ function createHeroUnit(scene, position, type) {
 
 function createDefenderFormation(scene) {
   const defenders = [];
+  const center = new Phaser.Math.Vector2(0.5, 0.5);
   HORDE_LANES.forEach((lane) => {
-    const center = new Phaser.Math.Vector2(0.5, 0.5);
-    const spawnVector = new Phaser.Math.Vector2(lane.spawn.x, lane.spawn.y);
-    const direction = spawnVector.clone().subtract(center).normalize();
-    const rangePos = clampToArena(
-      center.clone().add(direction.clone().scale(0.18))
-    );
-    const meleePos = clampToArena(
-      center.clone().add(direction.clone().scale(0.32))
-    );
+    const direction = new Phaser.Math.Vector2(
+      lane.spawn.x,
+      lane.spawn.y
+    )
+      .subtract(center)
+      .normalize();
+    const rangePos = clampToArena(center.clone().add(direction.clone().scale(0.18)));
+    const meleePos = clampToArena(center.clone().add(direction.clone().scale(0.32)));
     defenders.push(
       createHeroUnit(scene, rangePos, "range"),
       createHeroUnit(scene, meleePos, "melee")
