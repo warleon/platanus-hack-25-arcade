@@ -98,6 +98,10 @@ const UP_ICON =
   DATA_PREFIX +
   "UklGRlAAAABXRUJQVlA4TEQAAAAvD8ADEB+gkG0EGB/Qef0CAcKVDD3uBQIpjmG05z8Asg8+qIkkKZrjBymoJrzaCAnnDiRE9H8C+BzATXAS+AJtQgJvbw==";
 
+const REROLL_ICON =
+  DATA_PREFIX +
+  "UklGRlwAAABXRUJQVlA4TE8AAAAvD8ADEB8gICH8H2aGzBISEP5PMkDzSUhAuOZ/ssj8B6C88YFRJElScpc/QlAxEtCBipGwErheNzZxENH/9GMsHIfoL2nX0IRPyC5lnZkGAA==";
+
 const MELEE_WALK =
   DATA_PREFIX +
   "UklGRqoEAABXRUJQVlA4TJ0EAAAvV8AZEBcgJEgx3eEKBJIEVp9ZIJBksPPk8x9Q/cGSs+1xI0kvhaSA8Kqqu2VA2vUcEadgz8OKCYhCS6seLCPFU7iq514xC5YBe+UEJCP4HzPIGNAniOi/A7eRFMm9cLAQ7f6CV8fw6nwA0MBBZQ5Z2QAc6qTM1m8KYBEFa2J6gPWcPInGSA+EiwYjfRKlfDYpWC5lMulX+ES2iU9EtljxxQtWfJltqhdW+dkLlnnQ2DgoWLNNHO64lq3TGOcUtL4C49wG40c3YruM06SEOzievbDESw3OOVKChrCKV3FYa4yXsyJLwK7SqVV8RRA5KWbxNfx59SflZF8pe5PuMykBrrOfVR8HKe0opwsuDj/9kHNxqFSYZS7o4xA3XAd3U/3aPWKdXws+rd3DB0ycOz4NY00YnQMzjI/AFEqMn+Bwm0swPnuDvXlWtcDyueRFgqlMhWl2wPEXJdC0CsyDaRL1gql3CqgzTwqWX2zJcl8MugXsoUl4/4Q3GG1URvFUAEQFLN6UGM2hMJctYE4lEL3asHhMeZAGCLEBzqJqoldsggzANTEi+j4dSn3NLDKAcZPepUO5v/ouu34HB+n0NR3KbpEJePJ94ovwjXSaazt3QDs//gDjfHH4VnxBWP1D9qV+UkYc5rfu2eG7oUouOjQ4p/ijONKpe8C4hqj6c0ntnIL/iQeCTIQmXkru06H0MmQcxLjX7NKhfJI18T2E2JVc476Cox+Bo38EkhC7mtD7CY4iNbCsms+xawgf3cRRulUDdlVmuLkajDwcZBtuyfEGv+iqRzCn0lRYVwJPW2CtaqC/A8IvtsCfeqCtAFwJZqAHrAN2SRgaoGcE2hGMc9m7qwF72ALHDugT/qx5Y1rH+ydk7t5MiA0QRL2RYGQAFtFvJATxQJTy/5QwZPQbCX+WQcFNqlcTslwFUbZvJbgxe7rl6wnWZrmrVGCzn1fRhNN6KjG9n+CcEkJKML6LDWGaRXHu4iZLgHiTirCKUziRBruKKE7ej9gog2KWS4WN0iv+FbuaP0eZFRe51FyjnBXDxTeERaLCy/DsJrPCT7HhOu9T2NQ9m/cptzvXXMfZw7GbG8zoouI4OE24zT+DcJIN7KKA1Q5ovziwsi1g8T+F8IsbcJxucKiqZ+3HH0LQi3o2dGDLvoSd3cOxPCqYThVYPQHT5xIWnbQ2MwLrLzRYLPCV0WDUV0BLNhjeN+FVhdUAVnHluskSNIdiaQBiw47VAywNQcU9YKLnnihZ2J6riaLAiKd+kRBF7TJYEbV5VuTuzeSSyf2iNGNmcqo2s5RgZ/m2MBcpIR27MZIconynzOo0GJHfllmCPUT3BYZss7p/FjgpmXAygosKcHJSpncqNMa5e8zeAaZ3XwjeEVXYjzVGBNKxO6xIaLA3v8keLFiRe+zso8KefYk5ZWZfE06+gTB7hRlEw3X2d4TOq8wFzpNoFudrZfoJCMMlwOJW0Us7nQp8BRy6ETjeWP3i5kLRNwDrAzAdwV0/TgrafaYCU18VYCtgcQBTDba0DdA+AK0GqCaw21AmTsFUAfTnAjMZBbhJwdwBzIpssg3ZAAA=";
@@ -668,10 +672,7 @@ class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("castle", CASTLE, {
-      frameWidth: 44,
-      frameHeight: 44,
-    });
+    this.load.image("castle", CASTLE);
     this.load.image("gold_icon", GOLD_ICON);
     this.load.image("spell1_icon", SPELL_1_ICON);
     this.load.image("spell2_icon", SPELL_2_ICON);
@@ -680,6 +681,7 @@ class MainScene extends Phaser.Scene {
     this.load.image("mana_icon", MANA_ICON);
     this.load.image("plus_icon", PLUS_ICON);
     this.load.image("up_icon", UP_ICON);
+    this.load.image("reroll_icon", REROLL_ICON);
     this.load.spritesheet("melee_walk", MELEE_WALK, {
       frameWidth: 22,
       frameHeight: 26,
@@ -739,7 +741,12 @@ class MainScene extends Phaser.Scene {
 
     playTone(this, 440, 0.1);
 
-    this.goldText = centeredText(this, config.width / 2, 24, "", {
+    this.roundText = centeredText(this, config.width / 2, 16, "", {
+      fontSize: "18px",
+      color: "#ffffff",
+      fontStyle: "bold",
+    });
+    this.goldText = centeredText(this, config.width / 2, 36, "", {
       fontSize: "20px",
       color: "#ffff88",
       align: "center",
@@ -753,6 +760,7 @@ class MainScene extends Phaser.Scene {
       graphics?.destroy();
       graphics = null;
       this.goldText = null;
+      this.roundText = null;
       neutrals = [];
       drawnImages = [];
       player1 = null;
@@ -1604,7 +1612,7 @@ class Player {
     const isBase = selection.kind === KIND.BASE;
     // portrait
     drawRect(
-      0x00ff00,
+      0x20242e,
       x + x_offset,
       y + y_offset,
       cellSide * 34,
@@ -1624,7 +1632,7 @@ class Player {
     // health/mana bars
     const barX = x + cellSide * 40;
     const barY = y + cellSide * 2 + cellSide * 24;
-    drawRect(0xffff00, barX, barY, cellSide * 34, cellSide * 4);
+    drawRect(0x20242e, barX, barY, cellSide * 34, cellSide * 4);
     drawRect(
       0x00ff00,
       barX,
@@ -1632,7 +1640,7 @@ class Player {
       cellSide * 34 * (selection.health / selection.maxhealth),
       cellSide * 4
     );
-    drawRect(0xffff00, barX, barY + cellSide * 6, cellSide * 34, cellSide * 4);
+    drawRect(0x20242e, barX, barY + cellSide * 6, cellSide * 34, cellSide * 4);
     drawRect(
       0x0000ff,
       barX,
@@ -1873,6 +1881,14 @@ function executeHeroSpell(hero, spell) {
 }
 
 function castAreaDamage(cx, cy, radius, damage, caster) {
+  if (caster?.scene) {
+    const aoe = caster.scene.add.graphics();
+    aoe.fillStyle(0xff3333, 0.25);
+    aoe.fillCircle(cx, cy, radius);
+    aoe.lineStyle(2, 0xff5555, 0.7);
+    aoe.strokeCircle(cx, cy, radius);
+    caster.scene.time.delayedCall(200, () => aoe.destroy());
+  }
   neutrals.forEach((creep) => {
     if (!creep || creep.health <= 0) return;
     const dist = Phaser.Math.Distance.Between(cx, cy, creep.x, creep.y);
@@ -2046,7 +2062,7 @@ function renderActionButtons(buttons, startX, startY, cellSide) {
     const col = i % 3;
     const slotX = startX + col * xSpacing;
     const slotY = startY + row * ySpacing;
-    drawRect(0x00ff00, slotX, slotY, width, height);
+    drawRect(0x20242e, slotX, slotY, width, height);
     renderButtonIcons(slotX, slotY, cellSide, cfg.icons || []);
     renderButtonCost(slotX, slotY, cellSide, cfg.cost);
   }
@@ -2235,6 +2251,7 @@ function bindKeys(scene, handler) {
 function refreshGoldText() {
   const rate = player1?.base?.goldPerSec || player2?.base?.goldPerSec || 0;
   scene?.goldText?.setText(`Gold: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`);
+  scene?.roundText?.setText(`Round ${round}`);
 }
 
 function spendGold(amount) {
