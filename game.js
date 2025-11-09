@@ -261,7 +261,7 @@ class StartScene extends Phaser.Scene {
       this,
       config.width / 2,
       150,
-      "Presiona ambos botones de inicio para jugar de a 2, presiona un solo boton de inicio para jugar solo en ese lado del arcade",
+      "Presiona ambos botones de inicio para jugar de a 2, presiona un solo botón de inicio para jugar solo en ese lado del arcade",
       {
         fontSize: "20px",
         color: "#d0d0d0",
@@ -312,7 +312,7 @@ class StartScene extends Phaser.Scene {
     const namePart =
       names.length > 1
         ? `${names[0]} & ${names[1]}`
-        : names[0] || "Heroes desconocidos";
+        : names[0] || "Héroes desconocidos";
     return `Mejor Partida: ${namePart} - Ronda ${best.round}`;
   }
 
@@ -494,7 +494,7 @@ class StartScene extends Phaser.Scene {
     this.gameStarted = true;
     const message =
       data.players === 2
-        ? "Iniciando en modo 2 jugadores!"
+        ? "¡Iniciando en modo 2 jugadores!"
         : `Iniciando en modo ${data.solo === "P1" ? "Jugador 1" : "Jugador 2"}`;
     this.statusText.setText(message);
     this.time.delayedCall(700, () => {
@@ -685,7 +685,7 @@ class EndScene extends Phaser.Scene {
     };
     recordRun(payload);
     this.statusText.setText(
-      "Ronda registrada, regresando al menu principal..."
+      "Ronda registrada, regresando al menú principal..."
     );
     ctrlMode = { P1: true, P2: true };
     this.time.delayedCall(700, () => {
@@ -771,7 +771,7 @@ class MainScene extends Phaser.Scene {
     this.pauseOptionTexts = [];
     this.pauseOptionLabels = [
       "Continuar",
-      "Menu principal\n(abandonar partida)",
+      "Menú principal\n(abandonar partida)",
       "Terminar partida\n(y grabar nombres)",
     ];
     this.gameEnded = false;
@@ -2349,8 +2349,8 @@ function createHeroUnit(scene, position, type) {
     type === "range" ? "range_attack" : "melee_attack";
   hero.damage = type === "range" ? 40 : 60;
   hero.health = hero.maxhealth = type === "range" ? 80 : 120;
-  hero.attackRadius = type === "range" ? 0.2 : 0.08;
-  hero.visionRadius = type === "range" ? 0.25 : 0.15;
+  hero.attackRadius = type === "range" ? 0.2 : 0.01;
+  hero.visionRadius = type === "range" ? 0.3 : 0.15;
   hero.hitboxRadius = 0.02;
   hero.attackable = true;
   hero.home = { x: hero.x, y: hero.y };
@@ -2449,7 +2449,7 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
     creep.damage = 12 * roundMultiplier;
     creep.health = creep.maxhealth = 90 * roundMultiplier;
     creep.damageTone = 300;
-    creep.attackRadius = 0.08;
+    creep.attackRadius = 0.005;
     creep.visionRadius = 0.4;
     creep.hitboxRadius = 0.02;
     creep.targettable.push(...defenders, base);
