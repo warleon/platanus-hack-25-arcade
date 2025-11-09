@@ -159,6 +159,26 @@ let defenderUnits = [];
 let castleWaypoints = [];
 let neutrals = [];
 let gold = 0;
+const BUTTON_TO_INDEX = { A: 1, B: 2, C: 3, X: 4, Y: 5, Z: 6 };
+const SPELL_TYPES = { AOE_SELF: 0, AOE_RANDOM: 1, MASS_HEAL: 2 };
+const SPELL_DEFS = [
+  { id: 0, type: SPELL_TYPES.AOE_SELF },
+  { id: 1, type: SPELL_TYPES.AOE_RANDOM },
+  { id: 2, type: SPELL_TYPES.MASS_HEAL },
+];
+const HERO_UPGRADE_COST = {
+  health: 90,
+  mana: 90,
+  spell: 120,
+  healthRegen: 70,
+  manaRegen: 70,
+};
+const BASE_COST = {
+  spell: [200, 220, 260],
+  goldRate: 150,
+  maxHealth: 180,
+  regen: 140,
+};
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -714,6 +734,7 @@ class MainScene extends Phaser.Scene {
       color: "#ffff88",
       align: "center",
     });
+    refreshGoldText();
 
     bindKeys(this, this.handleArcadeInput);
     this.events.once(SHUTDOWN, () => {
@@ -788,6 +809,14 @@ class MainScene extends Phaser.Scene {
       } else {
         this.openPauseMenu();
       }
+      return;
+    }
+    const actionMatch = key && key.match(/^(P[12])(A|B|C|X|Y|Z)$/);
+    if (actionMatch) {
+      const btnIndex = BUTTON_TO_INDEX[actionMatch[2]];
+      const player =
+        actionMatch[1] === "P1" ? player1 : actionMatch[1] === "P2" ? player2 : null;
+      player?.onPress(btnIndex);
       return;
     }
     const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
@@ -1061,9 +1090,7 @@ function playHitSound(scene, baseFreq = 440) {
 }
 
 function flashDamage(entity) {
-  if (!entity?.scene || !entity.setTint) return;
-  entity.setTint(0xff5555);
-  entity.scene.time.delayedCall(120, () => entity.setTint());
+  flashTint(entity, 0xff5555, 120);
 }
 
 function handleDamageFeedback(entity) {
@@ -1096,6 +1123,7 @@ function applyHeroScaling(hero) {
   hero.maxhealth = hero.baseMaxhealth * scale;
   hero.health = hero.maxhealth;
   hero.damage = hero.baseDamage * scale;
+  hero.maxmana = hero.baseMaxmana * scale;
   hero.mana = hero.maxmana;
   hero.attackable = true;
   hero.setTint(0xffff88);
@@ -1113,6 +1141,29 @@ function grantHeroXP(hero, amount) {
     applyHeroScaling(hero);
     playLevelSound(hero.scene);
   }
+}
+
+function playHealSound(scene) {
+  const ctx = scene.sound?.context;
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  const now = ctx.currentTime;
+  osc.frequency.setValueAtTime(420, now);
+  osc.frequency.linearRampToValueAtTime(520, now + 0.2);
+  osc.type = "sine";
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
+function flashTint(entity, color, duration = 150) {
+  if (!entity?.setTint) return;
+  entity.setTint(color);
+  entity.scene.time.delayedCall(duration, () => entity.setTint());
 }
 
 class Entity extends Phaser.GameObjects.Sprite {
@@ -1320,12 +1371,10 @@ class Entity extends Phaser.GameObjects.Sprite {
     if (this.kind === KIND.PATH) return;
     if (this.kind === KIND.BASE) {
       if (this.goldPerSec) {
-        gold += (this.goldPerSec * dt);
-        if (scene?.goldText) {
-          scene.goldText.setText(
-            `Gold: ${gold.toFixed(0)} (+${this.goldPerSec.toFixed(1)}/s)`
-          );
-        }
+        gold += this.goldPerSec * dt;
+        this.scene?.goldText?.setText(
+          `Gold: ${gold.toFixed(0)} (+${this.goldPerSec.toFixed(1)}/s)`
+        );
       }
       return;
     }
@@ -1355,6 +1404,9 @@ class Entity extends Phaser.GameObjects.Sprite {
       }
     } else {
       this.idle();
+    }
+    if (this.kind === KIND.HERO) {
+      attemptHeroCast(this);
     }
   }
 
@@ -1456,6 +1508,8 @@ class Player {
     }
     if (entity.kind === KIND.HERO && !this.heroes.includes(entity)) {
       this.heroes.push(entity);
+      entity.spells = entity.spells || [null, null];
+      ensureHeroSpellSlots(entity, this);
     }
     entity.player = this;
     if (entity.kind === KIND.HERO) {
@@ -1463,13 +1517,16 @@ class Player {
     }
   }
 
-  // 1-2-3
-  // 4-5-6
   onPress(button) {
-    if (!this.selection || this.selection.spells.length < button) {
+    const selection = this.selection;
+    if (!selection) {
       return;
     }
-    this.selection.spells[button - 1]();
+    if (selection.kind === KIND.BASE) {
+      handleBaseButton(this, selection, button);
+    } else if (selection.kind === KIND.HERO) {
+      handleHeroButton(this, selection, button);
+    }
   }
   select(entity) {
     if (!entity) {
@@ -1618,6 +1675,274 @@ class Player {
       cellSide * 4
     );
   }
+}
+
+function handleBaseButton(player, base, button) {
+  switch (button) {
+    case 1:
+    case 2:
+    case 3:
+      upgradeBaseSpell(base, button - 1);
+      break;
+    case 4:
+      upgradeBaseGold(base);
+      break;
+    case 5:
+      upgradeBaseHealth(base);
+      break;
+    case 6:
+      upgradeBaseRegen(base);
+      break;
+    default:
+      break;
+  }
+}
+
+function handleHeroButton(player, hero, button) {
+  const levelMultiplier = Math.max(hero.level, 1);
+  switch (button) {
+    case 1:
+      heroUpgradeMaxHealth(hero, levelMultiplier);
+      break;
+    case 2:
+      heroUpgradeMaxMana(hero, levelMultiplier);
+      break;
+    case 3:
+      rerollHeroSpell(player, hero, 0);
+      break;
+    case 4:
+      heroUpgradeRegen(hero, levelMultiplier, "health");
+      break;
+    case 5:
+      heroUpgradeRegen(hero, levelMultiplier, "mana");
+      break;
+    case 6:
+      rerollHeroSpell(player, hero, 1);
+      break;
+    default:
+      break;
+  }
+}
+
+function upgradeCost(baseCost, levelMultiplier) {
+  return Math.floor(baseCost * levelMultiplier);
+}
+
+function upgradeBaseSpell(base, index) {
+  const nextLevel = (base.spellLevels[index] || 0) + 1;
+  const cost = BASE_COST.spell[index] * nextLevel;
+  if (!spendGold(cost)) return;
+  base.spellLevels[index] = nextLevel;
+  [player1, player2].forEach((p) => {
+    if (!p) return;
+    p.heroes.forEach((hero) => ensureHeroSpellSlots(hero, p));
+  });
+}
+
+function upgradeBaseGold(base) {
+  const cost = BASE_COST.goldRate * (base.goldUpgradeLevel + 1);
+  if (!spendGold(cost)) return;
+  base.goldUpgradeLevel++;
+  base.goldPerSec += 1;
+  refreshGoldText();
+}
+
+function upgradeBaseHealth(base) {
+  const cost = BASE_COST.maxHealth * (base.maxHealthLevel + 1);
+  if (!spendGold(cost)) return;
+  base.maxHealthLevel++;
+  base.maxhealth *= 1.15;
+  base.baseMaxhealth = base.maxhealth;
+  base.health = base.maxhealth;
+}
+
+function upgradeBaseRegen(base) {
+  const cost = BASE_COST.regen * (base.regenLevel + 1);
+  if (!spendGold(cost)) return;
+  base.regenLevel++;
+  base.healthRegenPerSec = (base.healthRegenPerSec || 0) + 1;
+}
+
+function heroUpgradeMaxHealth(hero, levelMultiplier) {
+  const cost = upgradeCost(HERO_UPGRADE_COST.health, levelMultiplier);
+  if (!spendGold(cost)) return;
+  hero.baseMaxhealth *= 1.15;
+  hero.maxhealth = hero.baseMaxhealth;
+  hero.health = hero.maxhealth;
+}
+
+function heroUpgradeMaxMana(hero, levelMultiplier) {
+  const cost = upgradeCost(HERO_UPGRADE_COST.mana, levelMultiplier);
+  if (!spendGold(cost)) return;
+  hero.baseMaxmana = (hero.baseMaxmana || hero.maxmana || 100) * 1.15;
+  hero.maxmana = hero.baseMaxmana;
+  hero.mana = hero.maxmana;
+}
+
+function heroUpgradeRegen(hero, levelMultiplier, type) {
+  const cost =
+    type === "health"
+      ? upgradeCost(HERO_UPGRADE_COST.healthRegen, levelMultiplier)
+      : upgradeCost(HERO_UPGRADE_COST.manaRegen, levelMultiplier);
+  if (!spendGold(cost)) return;
+  if (type === "health") {
+    hero.healthRegenPerSec += 1;
+  } else {
+    hero.manaRegenPerSec += 1;
+  }
+}
+
+function rerollHeroSpell(player, hero, slot) {
+  if (!player?.base?.spellLevels?.some((lvl) => lvl > 0)) return;
+  const cost = upgradeCost(HERO_UPGRADE_COST.spell, hero.level);
+  if (!spendGold(cost)) return;
+  assignHeroSpell(hero, player, slot, true);
+}
+
+function getUnlockedSpellIds(player) {
+  if (!player?.base?.spellLevels) return [];
+  const result = [];
+  player.base.spellLevels.forEach((lvl, idx) => {
+    if (lvl > 0) result.push(idx);
+  });
+  return result;
+}
+
+function ensureHeroSpellSlots(hero, player) {
+  if (!hero.spells) hero.spells = [null, null];
+  const unlocked = getUnlockedSpellIds(player);
+  if (!unlocked.length) return;
+  hero.spells.forEach((spell, slot) => {
+    if (!spell) {
+      assignHeroSpell(hero, player, slot, true);
+    }
+  });
+}
+
+function assignHeroSpell(hero, player, slot, forceDifferent = true) {
+  const unlocked = getUnlockedSpellIds(player);
+  if (!unlocked.length) return;
+  let available = unlocked.slice();
+  const otherSlot = slot === 0 ? hero.spells?.[1] : hero.spells?.[0];
+  if (otherSlot?.id !== undefined && forceDifferent !== false) {
+    available = available.filter((id) => id !== otherSlot.id);
+    if (!available.length) {
+      available = unlocked.slice();
+    }
+  }
+  const spellId =
+    available[Math.floor(Math.random() * available.length)] ?? unlocked[0];
+  hero.spells[slot] = createSpellInstance(spellId);
+}
+
+function createSpellInstance(id) {
+  switch (id) {
+    case 0:
+      return {
+        id,
+        type: SPELL_TYPES.AOE_SELF,
+        radius: Phaser.Math.Between(60, 140),
+        baseValue: Phaser.Math.Between(30, 60),
+      };
+    case 1:
+      return {
+        id,
+        type: SPELL_TYPES.AOE_RANDOM,
+        radius: Phaser.Math.Between(80, 180),
+        baseValue: Phaser.Math.Between(25, 55),
+      };
+    case 2:
+      return {
+        id,
+        type: SPELL_TYPES.MASS_HEAL,
+        baseValue: Phaser.Math.Between(35, 70),
+      };
+    default:
+      return null;
+  }
+}
+
+function attemptHeroCast(hero) {
+  if (
+    !hero.spells ||
+    hero.health <= 0 ||
+    !hero.currentTarget ||
+    hero.mana < hero.maxmana
+  )
+    return;
+  const readySlots = [];
+  hero.spells.forEach((spell, idx) => {
+    if (!spell) return;
+    if (hero.mana >= spell.baseValue) {
+      readySlots.push(idx);
+    }
+  });
+  if (!readySlots.length) return;
+  const slot =
+    readySlots[Math.floor(Math.random() * readySlots.length)] ?? readySlots[0];
+  const spell = hero.spells[slot];
+  if (!spell) return;
+  if (executeHeroSpell(hero, spell)) {
+    hero.mana = Math.max(0, hero.mana - spell.baseValue);
+  }
+}
+
+function executeHeroSpell(hero, spell) {
+  const player = hero.player;
+  const base = player?.base;
+  const spellLevel = base?.spellLevels?.[spell.id] || 1;
+  const multiplier = Math.pow(1.2, Math.max(0, spellLevel - 1));
+  const potency = spell.baseValue * multiplier;
+  switch (spell.type) {
+    case SPELL_TYPES.AOE_SELF:
+      castAreaDamage(hero.x, hero.y, spell.radius, potency, hero);
+      return true;
+    case SPELL_TYPES.AOE_RANDOM: {
+      const target = randomCreepInRange(hero, hero.visionRadius);
+      const centerX = target?.x ?? hero.x;
+      const centerY = target?.y ?? hero.y;
+      castAreaDamage(centerX, centerY, spell.radius, potency, hero);
+      return true;
+    }
+    case SPELL_TYPES.MASS_HEAL:
+      castMassHeal(hero, potency);
+      return true;
+    default:
+      return false;
+  }
+}
+
+function castAreaDamage(cx, cy, radius, damage, caster) {
+  neutrals.forEach((creep) => {
+    if (!creep || creep.health <= 0) return;
+    const dist = Phaser.Math.Distance.Between(cx, cy, creep.x, creep.y);
+    if (dist <= radius) {
+      creep.takeDamage(damage, caster);
+    }
+  });
+}
+
+function randomCreepInRange(hero, maxRadius) {
+  const candidates = neutrals.filter(
+    (creep) =>
+      creep &&
+      creep.health > 0 &&
+      Phaser.Math.Distance.Between(hero.x, hero.y, creep.x, creep.y) /
+        config.width <= maxRadius
+  );
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function castMassHeal(hero, amount) {
+  const player = hero.player;
+  if (!player) return;
+  playHealSound(hero.scene);
+  player.entities.forEach((entity) => {
+    if (!entity || entity.health <= 0) return;
+    entity.health = Math.min(entity.maxhealth || entity.health, entity.health + amount);
+    flashTint(entity, 0x55ff55, 200);
+  });
 }
 
 //Finds the closes entity to the current selection in the given direction
@@ -1769,6 +2094,22 @@ function bindKeys(scene, handler) {
   );
 }
 
+function refreshGoldText() {
+  const rate = player1?.base?.goldPerSec || player2?.base?.goldPerSec || 0;
+  scene?.goldText?.setText(
+    `Gold: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`
+  );
+}
+
+function spendGold(amount) {
+  if (gold < amount) {
+    return false;
+  }
+  gold -= amount;
+  refreshGoldText();
+  return true;
+}
+
 function clampToArena(vec) {
   return new Phaser.Math.Vector2(
     Phaser.Math.Clamp(vec.x, 0.08, 0.92),
@@ -1793,6 +2134,11 @@ function createHeroUnit(scene, position, type) {
   hero.healthRegenPerSec = type === "range" ? 6 : 9;
   hero.baseDamage = hero.damage;
   hero.baseMaxhealth = hero.maxhealth;
+  hero.maxmana = type === "range" ? 140 : 110;
+  hero.baseMaxmana = hero.maxmana;
+  hero.mana = 0;
+  hero.manaRegenPerSec = type === "range" ? 8 : 6;
+  hero.spells = [null, null];
   hero.xp = 0;
   hero.xpToLevel = 100;
   return hero;
@@ -1940,9 +2286,16 @@ function createBase() {
   base.setScale(3);
   base.maxhealth = 800;
   base.health = base.maxhealth;
+  base.baseMaxhealth = base.maxhealth;
   base.hitboxRadius = 0.08;
   base.attackable = true;
   base.damageTone = 200;
   base.goldPerSec = 5;
+  base.baseGoldPerSec = base.goldPerSec;
+  base.healthRegenPerSec = 3;
+  base.goldUpgradeLevel = 0;
+  base.maxHealthLevel = 0;
+  base.regenLevel = 0;
+  base.spellLevels = [0, 0, 0];
   return base;
 }
