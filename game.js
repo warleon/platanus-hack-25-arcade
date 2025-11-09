@@ -264,7 +264,7 @@ class StartScene extends Phaser.Scene {
   createControllerDisplays() {
     this.startButtons = {};
     this.drawController(200, "PLAYER ONE", false, "P1");
-    this.drawController(600, "PLAYER TWO", true, "P2");
+    this.drawController(600, "PLAYER TWO", false, "P2");
   }
 
   drawController(x, label, mirrored, key) {
@@ -274,8 +274,8 @@ class StartScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xffffff);
     container.add(panel);
 
-    const joystickX = mirrored ? 90 : -90;
-    const buttonStartX = mirrored ? -40 : 40;
+    const joystickX = -90;
+    const buttonStartX = 40;
 
     const stickBase = this.add.circle(joystickX, 40, 45, 0x1a1a1a);
     const stick = this.add.rectangle(joystickX, -5, 12, 100, 0x555555);
