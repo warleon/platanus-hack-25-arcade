@@ -143,6 +143,44 @@ let enemiesCount = 0;
 let roundStarting = false;
 let controllerMode = { P1: true, P2: true };
 
+const BEST_RUN_KEY = "arcade_best_run";
+const LAST_RUN_KEY = "arcade_last_run";
+
+function readStoredRun(key) {
+  try {
+    if (typeof localStorage === "undefined") {
+      return null;
+    }
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function writeStoredRun(key, data) {
+  try {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (_e) {
+    // ignore storage errors
+  }
+}
+
+function recordRun(data) {
+  writeStoredRun(LAST_RUN_KEY, data);
+  const best = readStoredRun(BEST_RUN_KEY);
+  if (!best || data.round > best.round) {
+    writeStoredRun(BEST_RUN_KEY, data);
+  }
+}
+
+function getBestRun() {
+  return readStoredRun(BEST_RUN_KEY);
+}
+
 class StartScene extends Phaser.Scene {
   constructor() {
     super("StartScene");
@@ -152,6 +190,12 @@ class StartScene extends Phaser.Scene {
   }
 
   create() {
+    round = 0;
+    enemiesCount = 0;
+    roundStarting = false;
+    player1 = null;
+    player2 = null;
+    controllerMode = { P1: true, P2: true };
     this.startCounts = { P1: 0, P2: 0 };
     this.gameStarted = false;
     this.add
@@ -177,6 +221,13 @@ class StartScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.createControllerDisplays();
+    this.bestRunText = this.add
+      .text(config.width / 2, config.height - 110, this.getBestLabel(), {
+        fontSize: "22px",
+        color: "#80ff80",
+        align: "center",
+      })
+      .setOrigin(0.5);
     this.statusText = this.add
       .text(config.width / 2, config.height - 60, "Waiting for players...", {
         fontSize: "22px",
@@ -189,6 +240,25 @@ class StartScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard.off("keydown", this.handleKey, this);
     });
+  }
+
+  getBestLabel() {
+    const best = getBestRun();
+    if (!best) {
+      return "Top Team: No runs recorded yet.";
+    }
+    const names = [];
+    if (best.p1Name) {
+      names.push(best.p1Name);
+    }
+    if (best.p2Name) {
+      names.push(best.p2Name);
+    }
+    const namePart =
+      names.length > 1
+        ? `${names[0]} & ${names[1]}`
+        : names[0] || "Unknown Heroes";
+    return `Top Team: ${namePart} - Round ${best.round}`;
   }
 
   createControllerDisplays() {
@@ -332,6 +402,210 @@ class StartScene extends Phaser.Scene {
   }
 }
 
+class EndScene extends Phaser.Scene {
+  constructor() {
+    super("EndScene");
+    this.controllers = { P1: true, P2: true };
+    this.nameEntries = {};
+    this.roundAchieved = 0;
+    this.saving = false;
+  }
+
+  init(data) {
+    this.roundAchieved = data?.round ?? 0;
+    this.controllers = data?.controllers || { P1: true, P2: true };
+    this.saving = false;
+  }
+
+  create() {
+    this.add
+      .text(config.width / 2, 80, "Record Your Team", {
+        fontSize: "38px",
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(config.width / 2, 140, `Round Reached: ${this.roundAchieved}`, {
+        fontSize: "26px",
+        color: "#ffd966",
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(
+        config.width / 2,
+        190,
+        "Use your joystick to move the cursor.\nUp/Down change letters, Left/Right move slots.\nPress START to confirm and save.",
+        {
+          fontSize: "20px",
+          color: "#d0d0d0",
+          align: "center",
+        }
+      )
+      .setOrigin(0.5);
+
+    this.nameEntries = {
+      P1: this.createNameEntry(220, "PLAYER ONE", this.controllers.P1),
+      P2: this.createNameEntry(580, "PLAYER TWO", this.controllers.P2),
+    };
+
+    this.statusText = this.add
+      .text(config.width / 2, config.height - 60, "Press START to save.", {
+        fontSize: "22px",
+        color: "#80ff80",
+      })
+      .setOrigin(0.5);
+
+    this.input.keyboard.on("keydown", this.handleKey, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard.off("keydown", this.handleKey, this);
+    });
+  }
+
+  createNameEntry(x, label, enabled) {
+    const NAME_LEN = 6;
+    this.add
+      .rectangle(x, 340, 320, 220, 0x050505, 0.85)
+      .setStrokeStyle(2, enabled ? 0xffffff : 0x555555);
+    this.add
+      .text(x, 240, label, {
+        fontSize: "22px",
+        color: "#ffffff",
+      })
+      .setOrigin(0.5);
+    this.add
+      .text(x, 260, enabled ? "Active" : "Not participating", {
+        fontSize: "16px",
+        color: enabled ? "#00ffea" : "#888888",
+      })
+      .setOrigin(0.5);
+    const letters = Array(NAME_LEN).fill("A");
+    if (!enabled) {
+      letters.fill("-");
+    }
+    const nameText = this.add
+      .text(x, 330, letters.join(""), {
+        fontFamily: "monospace",
+        fontSize: "34px",
+        color: "#ffffff",
+      })
+      .setOrigin(0.5);
+    const pointer = this.add
+      .triangle(x, 360, 0, 0, 14, 0, 7, -18, 0xffff00, 1)
+      .setOrigin(0.5, 0)
+      .setVisible(enabled);
+
+    const entry = {
+      enabled,
+      letters,
+      index: 0,
+      nameText,
+      pointer,
+    };
+    this.updateNameEntry(entry);
+    return entry;
+  }
+
+  handleKey(event) {
+    const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
+    if (key === "START1" || key === "START2") {
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+      this.confirmSave();
+      return;
+    }
+    const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
+    if (!match) {
+      return;
+    }
+    const playerKey = match[1];
+    if (!this.controllers[playerKey]) {
+      return;
+    }
+    const code = match[2];
+    this.applyDirection(playerKey, code);
+  }
+
+  applyDirection(playerKey, code) {
+    const entry = this.nameEntries[playerKey];
+    if (!entry || !entry.enabled) {
+      return;
+    }
+    if (code.includes("L")) {
+      entry.index =
+        (entry.index + entry.letters.length - 1) % entry.letters.length;
+    }
+    if (code.includes("R")) {
+      entry.index = (entry.index + 1) % entry.letters.length;
+    }
+    if (code.includes("U")) {
+      this.shiftLetter(entry, 1);
+    }
+    if (code.includes("D")) {
+      this.shiftLetter(entry, -1);
+    }
+    this.updateNameEntry(entry);
+  }
+
+  shiftLetter(entry, delta) {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+    const current = entry.letters[entry.index];
+    const idx = alphabet.indexOf(current);
+    const safeIndex = idx === -1 ? 0 : idx;
+    const nextIndex =
+      (safeIndex + delta + alphabet.length) % alphabet.length;
+    entry.letters[entry.index] = alphabet[nextIndex];
+  }
+
+  updateNameEntry(entry) {
+    const display = entry.letters
+      .map((ch) => (ch === " " ? "_" : ch))
+      .join("");
+    entry.nameText.setText(display);
+    if (!entry.enabled) {
+      entry.pointer.setVisible(false);
+      return;
+    }
+    entry.pointer.setVisible(true);
+    const width = entry.nameText.displayWidth || entry.letters.length * 24;
+    const slot = width / entry.letters.length;
+    const left = entry.nameText.x - width / 2;
+    entry.pointer.x = left + slot * entry.index + slot / 2;
+    entry.pointer.y = entry.nameText.y + 24;
+  }
+
+  confirmSave() {
+    if (this.saving) {
+      return;
+    }
+    this.saving = true;
+    const payload = {
+      round: this.roundAchieved,
+      p1Name: this.extractName("P1"),
+      p2Name: this.extractName("P2"),
+      timestamp: Date.now(),
+    };
+    recordRun(payload);
+    this.statusText.setText("Score saved! Returning to main menu...");
+    controllerMode = { P1: true, P2: true };
+    this.time.delayedCall(400, () => {
+      this.scene.start("StartScene");
+    });
+  }
+
+  extractName(key) {
+    const entry = this.nameEntries[key];
+    if (!entry || !entry.enabled) {
+      return null;
+    }
+    const name = entry.letters.join("").trim();
+    return name || (key === "P1" ? "Player 1" : "Player 2");
+  }
+}
+
 class MainScene extends Phaser.Scene {
   constructor() {
     super("MainScene");
@@ -392,6 +666,15 @@ class MainScene extends Phaser.Scene {
     graphics = this.add.graphics();
     createBackground();
     const base = createBase();
+    this.isPaused = false;
+    this.pauseMenu = null;
+    this.pauseSelection = 0;
+    this.pauseOptionTexts = [];
+    this.pauseOptionLabels = [
+      "Resume Game",
+      "Main Menu (no record)",
+      "Finish Run (record names)",
+    ];
 
     createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
     createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
@@ -438,10 +721,24 @@ class MainScene extends Phaser.Scene {
     this.input.keyboard.on("keydown", this.handleArcadeInput, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard.off("keydown", this.handleArcadeInput, this);
+      this.pauseMenu?.destroy();
+      this.pauseMenu = null;
+      graphics?.destroy();
+      graphics = null;
+      drawnImages = [];
+      player1 = null;
+      player2 = null;
+      scene = null;
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard.off("keydown", this.handleArcadeInput, this);
     });
   }
 
   update(_time, delta) {
+    if (this.isPaused) {
+      return;
+    }
     if (player1) {
       player1.entities.forEach((entity) => {
         entity.update(_time, delta);
@@ -471,9 +768,25 @@ class MainScene extends Phaser.Scene {
 
   handleArcadeInput(event) {
     const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
+    if (key === "START1" || key === "START2") {
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+      if (this.pauseMenu) {
+        this.confirmPauseSelection();
+      } else {
+        this.openPauseMenu();
+      }
+      return;
+    }
     const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
 
     if (!match) {
+      return;
+    }
+
+    if (this.pauseMenu) {
+      this.navigatePauseMenu(match[2]);
       return;
     }
 
@@ -511,6 +824,127 @@ class MainScene extends Phaser.Scene {
       player2?.moveSelectionTo(direction);
     }
   }
+
+  openPauseMenu() {
+    if (this.pauseMenu) {
+      return;
+    }
+    this.isPaused = true;
+    if (this.physics.world) {
+      this.physics.world.pause();
+    }
+    this.pauseSelection = 0;
+    const overlay = this.add
+      .rectangle(0, 0, config.width, config.height, 0x000000, 0.65)
+      .setOrigin(0, 0);
+    const panel = this.add
+      .rectangle(config.width / 2, config.height / 2, 420, 280, 0x111111, 0.95)
+      .setStrokeStyle(2, 0xffffff);
+    const title = this.add
+      .text(config.width / 2, config.height / 2 - 110, "Game Paused", {
+        fontSize: "32px",
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    const help = this.add
+      .text(
+        config.width / 2,
+        config.height / 2 - 70,
+        "Use joystick to move • Press START to choose",
+        { fontSize: "18px", color: "#dddddd" }
+      )
+      .setOrigin(0.5);
+
+    this.pauseOptionTexts = this.pauseOptionLabels.map((label, index) => {
+      return this.add
+        .text(
+          config.width / 2,
+          config.height / 2 - 10 + index * 60,
+          label,
+          {
+            fontSize: "22px",
+            color: "#ffffff",
+          }
+        )
+        .setOrigin(0.5);
+    });
+
+    this.pauseMenu = this.add.container(0, 0, [
+      overlay,
+      panel,
+      title,
+      help,
+      ...this.pauseOptionTexts,
+    ]);
+    this.pauseMenu.setDepth(1000);
+    this.updatePauseMenuVisuals();
+  }
+
+  closePauseMenu() {
+    this.isPaused = false;
+    if (this.physics.world) {
+      this.physics.world.resume();
+    }
+    this.pauseMenu?.destroy();
+    this.pauseMenu = null;
+    this.pauseOptionTexts = [];
+  }
+
+  navigatePauseMenu(code) {
+    if (!this.pauseMenu) {
+      return;
+    }
+    if (code.includes("U") || code.includes("L")) {
+      this.pauseSelection =
+        (this.pauseSelection + this.pauseOptionLabels.length - 1) %
+        this.pauseOptionLabels.length;
+    }
+    if (code.includes("D") || code.includes("R")) {
+      this.pauseSelection =
+        (this.pauseSelection + 1) % this.pauseOptionLabels.length;
+    }
+    this.updatePauseMenuVisuals();
+  }
+
+  updatePauseMenuVisuals() {
+    this.pauseOptionTexts.forEach((txt, idx) => {
+      if (!txt) {
+        return;
+      }
+      const selected = idx === this.pauseSelection;
+      txt.setColor(selected ? "#ffff66" : "#ffffff");
+      txt.setStyle({ fontStyle: selected ? "bold" : "normal" });
+    });
+  }
+
+  confirmPauseSelection() {
+    if (!this.pauseMenu) {
+      return;
+    }
+    this.applyPauseSelection(this.pauseSelection);
+  }
+
+  applyPauseSelection(index) {
+    switch (index) {
+      case 0:
+        this.closePauseMenu();
+        break;
+      case 1:
+        this.closePauseMenu();
+        this.scene.start("StartScene");
+        break;
+      case 2:
+        this.closePauseMenu();
+        this.scene.start("EndScene", {
+          round: round,
+          controllers: { ...controllerMode },
+        });
+        break;
+      default:
+        this.closePauseMenu();
+    }
+  }
 }
 
 const config = {
@@ -519,7 +953,7 @@ const config = {
   height: 600,
   backgroundColor: "#000000",
   pixelArt: true,
-  scene: [StartScene, MainScene],
+  scene: [StartScene, MainScene, EndScene],
   physics: {
     default: "arcade",
     arcade: { debug: true },
