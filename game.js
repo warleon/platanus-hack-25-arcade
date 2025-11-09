@@ -88,9 +88,8 @@ const DIRECTIONS = {
   downRight: { x: 1, y: 1 },
 };
 
-const SPRITE_SHEET =
-  "data:image/webp;base64,UklGRkQAAABXRUJQVlA4TDgAAAAvP8ADAB8gFkz8kXLoHJyQgNjjvz12iAIBIkiJCKHu5j/GHY0AYbbRJCc5yUO4b0T/Y9uqVAH+Ag==";
-
+const CASTLE =
+  "data:image/webp;base64,UklGRt4CAABXRUJQVlA4TNICAAAvK8AKEGegJpIk5Rjii07Ax+xf2CtRU9tqw8hhrgogRUD3P0RNJKiJJLf5TjlUgiAG4o/FNFzNfwDA6Lc4GBBFgPgqgd9ob0nqj2f+8+6CXPf/27j5p/dEdJMPntLbFj+BE7nBU4pc0t3LFAYHkMJNLgBJcLoCSASnFNtJNqUdhX+eTuJdXiGi/wrbtm1k1BltfQgABNBP/fKWT/yHT15e8HLkPzUe8eph3L8sb1R5wfzRxnDfOr8xPwzw/jBefwFIkOAlvPRv+fDlRgwQHE3Gd0ARRcx5c8GSl88mR0oOf2yQTFtpsFv8zsTy0cZAySihQ0LyAyGFEDJthDQs6XIRsj5KXcKHSpCx8Df6cpglUVRZquRdjtrH3cPadGX2Ixdd6/foXDrDzwGAwAn0VFjUWst8okJpitYD0SLqnFYYpN4zaZ0X65tk1O81elB62lv3wRaoe4xL74lGTxp3vfUoTihrEC1W35zMvaDlPz3fvHiN+UrF0xEqe47WqDV5eRYgmI8nELWzTqNDRLu8EQPM78zHWYHOswzdq8Mf82c+bfzYiP9omemekJc/4o14+Wh9fj53iM7D4uHLnfl5WC7f/XRjY5jbfAw1kvmX88NQPCWMNGvEEEJrTUV2w3g4hMwodqB5w/7GA64UUhQ8BOOSeidLTWLSRJnUNBuSlfZQsUfjT8bHx7130V5RS0KgNRUx2VVCo5RS8rRb46chDzmrMy75XJRxxoWYG+XngJqkzozJZlvYNsakIjUlTZtMi9Gm2a/tula6qxpFyk8DzZL6QY2aXUJoi++qNM1mSktmptlsWzXJ9WYz7RjWsKy0ZKbOFJf0+o3dXZkJwcz0OUgLNV2Xku1ejyiVStYLw4dgVvOISj5drWmdsXZHTg8BbyhGCCE3u4pcv/H45p4xLIQPyUwIAEEzivZOA0CQcXYCgBCoyAv8XQEBOQG9ClqEeAYAAA==";
 const HEALING_ICON =
   "data:image/webp;base64,UklGRl4BAABXRUJQVlA4TFEBAAAvH8AHEEegIACQhPr/jRENxhy1bdswPtl/Z+wVUBpJknKUf3bnLgFy9C/nPwDgqzZ+Lk7LSIiecr5lFsDRtrdtQ6ccQOXJnKjNieC2RoQ8N8J7hS7gh/CeIp2bpMsRIvqvsG3bhkm6xx/qMwuiBsiy+kmpDTFby8xsmSdqCYC/w1Vcts8AGvtrfQcHvNXPf4bqWu/ALOA/kbOEzd7vX7ooOgdPVvugf4uinfj3qr3f75xv23uHYRiEU4el943fxySKvpBlkMfIIgpiL+L0g6ShyHpyuUu6KtQ4pbfIYufDXBEe+2v6aIWD5kAeTbjjci0yZfDgsGfHdodpEftmU522xZr5gJlrVkQTonzNi7zRGEWaNqVXZDUSIhqitdNkmWmICIM55VlmWgIiolq3ps0zQ0RUAGhsyWBeAhG1LYZRr5eg8Ubkk1cFtyNX6j27GU8KAA==";
 
@@ -102,12 +101,6 @@ const THUNDER_ICON =
 
 const RADIAL_ICON =
   "data:image/webp;base64,UklGRvABAABXRUJQVlA4TOQBAAAvH8AHAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNkrRtchoHxjnTLWevaF3AotAJVO1ZzzMN3iYG52x36WE1K4R8AauYrVOjjXNQXc+PzxDR/wmIogvRf345EpnEGK3MZDIyRmt9LTU61UkGAKPUpNqoU6nRKQAAjI3RyqRGxQC7mANcSrXWSqcZ7CIWU8hirYzWCsaI1jmAsVImvT0BRFciIoCKVJzlM0REhziFkVIZACK6vQIxH42VBrCuwjd005aIuZrADNEVVJO16OBQBrPKoq/JbxcWp9cALDrnieietS6HnQqx+Ei0ILqBOM3hvcXCU9vNaRt/lfkDxKoiWnE3J1thfrtwBVG7Yp5TaavzM2c9fWxD6Duiop7u4T0ivwp9WHoqSyyw9vcWHPqBie7VV388Ilq0PHDo73uq35atv9euAm965nt0rzns6V7H/SBrZqqpOVzfW3TMG5Gel56ah+3vruMgIgdhef9j8+LF/DP/Y+iXXd08v9WtOPyVRNYcNnHz4iG94yCnki8i/PfipevNzp/1X/kafZE+DB/3L8Ynet6IRCIHQ/Ank3v7GxE5JV9ERLqH";
-
-const CHURCH =
-  "data:image/webp;base64,UklGRkYCAABXRUJQVlA4TDoCAAAvP8APECdAkG0bG8FGc4wLBMiUAz06EGTbxmawSRzj8x8AdWbNP0iMbTVsJexU8FAKME8qIBYq4G9E/03ZxvFsAxH9nwBJLvL0c/ZYfWx5bH2s/H+vh7a6PFVufV5PbesNL/ut14294KH+g/WGF6wPKZbcpyK3ebnR0bGkzAv2TAdYcr0qkNgImlrKXYH1YitQsmPJVWA5+XSQAPm2xOZe9ILHg2K9cnoB8PqI6InC2HW52NxPIFJqyi4+Xk8oX/DcjKy4+KvuBWZ05aWCqFwuZmvFjDSStAMUUOIiZoAkcagsRgWwGy8a5pugAgDJxpNuSKmegUpSd8BUEyNhpkaqYQdv8AykKVSNTMTwN6lnIGrXaopE6/GmKk7NuJNkZjvBOQE1Wqq/55hvvQDQDMzMNiP8jUvTSiWNypPvmBEjvFzAzHgguYo4vxETETVBgnowEWGfEYExhl7AqGcqIjIjonHEKICeKUgjuB7iWCNGw6kZ1UiqrZI4jnIwKhVU2CpXzXtEtArAeCCpqyQ6vUcEC5QHklgkU7GPGTELmFhTBRgWMQapeoJVcgpr3xggwINJds4D2jfiQrEk1OscKSUViyRHLe4FCaOpSfLT3L1njGqrpNy9Kt3R5oHURdJbre7dp9cDSaxyc6N6+HCr3wijyu3q/3xG67t7D4Pcd61zRFS3XieWe3/u3/cc3mute+EPtmmjh7sr3WnyQ4RHmzvYXclfSPU233C4gvLbfXifuuj+kh9/ejgX+TU=";
-
-const CASINO =
-  "data:image/webp;base64,UklGRpIFAABXRUJQVlA4TIUFAAAvP8APEKfAJgCANDi8Lr810P5NSAGTHGwkSU4jZooUKmT8/9dsVamJJEk5enBA2UVfr+L9m4GUa/4DAAAMhC8DH4PSoNqDZBJMYXOYa508pPDtv6g6+McSk1rIaVG8r1OgkbQCBdt24zaSepAJfALEx7D/zUpJVXV6ARH9n4DrT/f10/8H9Kfl/nH4Wd0F/qjs5P5RF1uvn521fxaztv6orAJ/0vQkiZ8xz6pqAPP6H+qZGTzZnTsBmBlmZvifmMHXrGru/WLAdHf/IW+SADYAi5NVtYGNE2E455zu4R/wHgeArOI5EZFdhU0g4gSraOcEZ34XuwkAJ6ryPHd2cu9CnBeYxTnk75pugNvNmYVTmZkk9q6srF2EmbkzzszvmAGArDrmu/IJzcy9AWRVVoLOKiKi59c4BGCHVcyq5N4bux/7nMNn5slKmEVEzy9wHHB3P6zi1g0Ftr6R55w+3KyCmRkZM/29caCOu7OqNoBDAJkvSQBJdLKqzAhEnPHvNAGcLHrWBvbWz0c+8oU8N5EgMwmQGcH5BgcA47CyFEDzXqtn7bclIuvv9cmTyJ1JHvOI0V/wHSdLAezuJWtx+QtERHqt1ansrtxqbhEDfZsZwM3tJAHwI9JrLVGSubFlSctaopLNgypzOydm4oUc4HD7rlLsLUtEWkSqs/bemJHPWp9e6yaTWZubZAz8K8+sqkwA3iJL1qd7mJl7I05n6lpLOERmVSUBDkKvS+NhJ7NSFeeWliXa2fwqJpNL1Hv17oeZWQyC1zWcgbs7s3Tvs0S6PWs69stGRGtl32ut6QbfbABeV3OACPfMhJyPPKsq4vgLgJjeLbLWWoLdVf7sgd8vx9288mws6W6VqmScYyc3ntN7s5+O01WVWcVB3Bc5w2flJtdaIl5VOR3nnAMAFtx77yVLZIFdhePuPTDXxwYOsvIhIqxKVDNezbSBvbcsEREQVeruNkC84cSJzGSqqKpWpZLD84jTeBMR1Z1Z5W7mA5hrRwwiztlZwEdElmRls9jdTZJ7o/fea60ln/NIbu8BwnUiOCSBSkXfS4RZVYMiq/YTe+8tIkukWVUA2a2AuXSQg3POySqivVVWVlaNAgQA7r23LtEtBDN3nHPOABaiTcb4OUyy6lBkrSWdVVX57P2krCWSullFnhN8+D/KmeY0YcaqvVvWallSWc/9/vn3wyVUZiZskz0ALP7V4TA4NHPfVckW/6wlazVJPvqvtdYSdmZV1Xb3HsUAvpQvHHPzYlZWy1oia4187S/ZWVVadPcZzKjrunQYEez2qsLOLGSKSLesx1oPkcy9q0hj8ewGdOD3v5eyGREzueFmvisrs6ra+XU3kJlJmLk5OW5mFvf653KdjmBwtpudzVRWVWZWfZX1hBaOm51RmMHCP/LQJhkRM0bsopmhqrIqs96zCjCr8nAbvEbct/xzXarajCeHnWlmXji+d2YmM1kwY5mZVZIDgxks5Jb1z3WF6swb2Q3zzXJ35wYUAMoeNLPdM26P8Lhvua7rclVtPp4z47vOCyICEUYzs0qzmQEMMLOIz5I3V1U2g49zprPwqHg3dzNjdjcUT7Og3Ev+flxuqurNL86Zd0aQEcGYV4XBzAxh7vd9L7ne3VW1m4w4355vEmZmMNhrRNz3LXJ9T6e7+ZgvXgH7EjMKs4hwv+97yf3V5W76nMfM+Lfs65kBgIj7KSLXd90cqqpokmHnu/ZdHY8IvZ8icn3f3VwVKtBm8zvxjYigyOff+76XiPz7C9flavrO3+1yf+7nEpF1/UY1hUJFRUQg8855uz/3uzzX9VtUYa7yq/f9ue/P59/7fa3Hun6viLiqukK/9215vf7kxwyq6qqi+gtLvrz+/Dde5X3J6/Vf/V3X7wUA";
 
 const MELEE_WALK =
   "data:image/webp;base64,UklGRqoEAABXRUJQVlA4TJ0EAAAvV8AZEBcgJEgx3eEKBJIEVp9ZIJBksPPk8x9Q/cGSs+1xI0kvhaSA8Kqqu2VA2vUcEadgz8OKCYhCS6seLCPFU7iq514xC5YBe+UEJCP4HzPIGNAniOi/A7eRFMm9cLAQ7f6CV8fw6nwA0MBBZQ5Z2QAc6qTM1m8KYBEFa2J6gPWcPInGSA+EiwYjfRKlfDYpWC5lMulX+ES2iU9EtljxxQtWfJltqhdW+dkLlnnQ2DgoWLNNHO64lq3TGOcUtL4C49wG40c3YruM06SEOzievbDESw3OOVKChrCKV3FYa4yXsyJLwK7SqVV8RRA5KWbxNfx59SflZF8pe5PuMykBrrOfVR8HKe0opwsuDj/9kHNxqFSYZS7o4xA3XAd3U/3aPWKdXws+rd3DB0ycOz4NY00YnQMzjI/AFEqMn+Bwm0swPnuDvXlWtcDyueRFgqlMhWl2wPEXJdC0CsyDaRL1gql3CqgzTwqWX2zJcl8MugXsoUl4/4Q3GG1URvFUAEQFLN6UGM2hMJctYE4lEL3asHhMeZAGCLEBzqJqoldsggzANTEi+j4dSn3NLDKAcZPepUO5v/ouu34HB+n0NR3KbpEJePJ94ovwjXSaazt3QDs//gDjfHH4VnxBWP1D9qV+UkYc5rfu2eG7oUouOjQ4p/ijONKpe8C4hqj6c0ntnIL/iQeCTIQmXkru06H0MmQcxLjX7NKhfJI18T2E2JVc476Cox+Bo38EkhC7mtD7CY4iNbCsms+xawgf3cRRulUDdlVmuLkajDwcZBtuyfEGv+iqRzCn0lRYVwJPW2CtaqC/A8IvtsCfeqCtAFwJZqAHrAN2SRgaoGcE2hGMc9m7qwF72ALHDugT/qx5Y1rH+ydk7t5MiA0QRL2RYGQAFtFvJATxQJTy/5QwZPQbCX+WQcFNqlcTslwFUbZvJbgxe7rl6wnWZrmrVGCzn1fRhNN6KjG9n+CcEkJKML6LDWGaRXHu4iZLgHiTirCKUziRBruKKE7ej9gog2KWS4WN0iv+FbuaP0eZFRe51FyjnBXDxTeERaLCy/DsJrPCT7HhOu9T2NQ9m/cptzvXXMfZw7GbG8zoouI4OE24zT+DcJIN7KKA1Q5ovziwsi1g8T+F8IsbcJxucKiqZ+3HH0LQi3o2dGDLvoSd3cOxPCqYThVYPQHT5xIWnbQ2MwLrLzRYLPCV0WDUV0BLNhjeN+FVhdUAVnHluskSNIdiaQBiw47VAywNQcU9YKLnnihZ2J6riaLAiKd+kRBF7TJYEbV5VuTuzeSSyf2iNGNmcqo2s5RgZ/m2MBcpIR27MZIconynzOo0GJHfllmCPUT3BYZss7p/FjgpmXAygosKcHJSpncqNMa5e8zeAaZ3XwjeEVXYjzVGBNKxO6xIaLA3v8keLFiRe+zso8KefYk5ZWZfE06+gTB7hRlEw3X2d4TOq8wFzpNoFudrZfoJCMMlwOJW0Us7nQp8BRy6ETjeWP3i5kLRNwDrAzAdwV0/TgrafaYCU18VYCtgcQBTDba0DdA+AK0GqCaw21AmTsFUAfTnAjMZBbhJwdwBzIpssg3ZAAA=";
@@ -156,7 +149,6 @@ const DIE = "die";
 const PATH = "path";
 const HERO = "hero";
 const CREEP = "creep";
-const RESOURCE = "resource";
 const BASE = "base";
 const UI = "ui";
 // Game variables
@@ -167,14 +159,14 @@ let player2 = null;
 let round = 0;
 let drawnImages = [];
 let enemiesCount = 0;
+let roundStarting = false;
 
 // Game functions
 function preload() {
-  this.load.spritesheet("test", SPRITE_SHEET, {
-    frameWidth: 16,
-    frameHeight: 16,
+  this.load.image("castle", CASTLE, {
+    frameWidth: 44,
+    frameHeight: 44,
   });
-
   this.load.image("heal_icon", HEALING_ICON, {
     frameWidth: 32,
     frameHeight: 32,
@@ -182,14 +174,6 @@ function preload() {
   this.load.image("hit_icon", HIT_ICON, {
     frameWidth: 32,
     frameHeight: 32,
-  });
-  this.load.image("church", CHURCH, {
-    frameWidth: 64,
-    frameHeight: 64,
-  });
-  this.load.image("casino", CASINO, {
-    frameWidth: 64,
-    frameHeight: 64,
   });
   this.load.spritesheet("melee_walk", MELEE_WALK, {
     frameWidth: 22,
@@ -220,35 +204,12 @@ function preload() {
 function create() {
   scene = this;
   graphics = this.add.graphics();
+  createBackground();
+  const base = createBase();
 
   // Keyboard input
   this.input.keyboard.on("keydown", onInput);
 
-  // Animations
-  scene.anims.create({
-    key: IDLE,
-    frames: scene.anims.generateFrameNumbers("test", { start: 0, end: 0 }),
-    frameRate: 2,
-    repeat: -1,
-  });
-  scene.anims.create({
-    key: WALK,
-    frames: scene.anims.generateFrameNumbers("test", { start: 1, end: 1 }),
-    frameRate: 2,
-    repeat: -1,
-  });
-  scene.anims.create({
-    key: ATTACK,
-    frames: scene.anims.generateFrameNumbers("test", { start: 2, end: 2 }),
-    frameRate: 2,
-    repeat: -1,
-  });
-  scene.anims.create({
-    key: DIE,
-    frames: scene.anims.generateFrameNumbers("test", { start: 3, end: 3 }),
-    frameRate: 2,
-    repeat: -1,
-  });
   // knight
   createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
   createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
@@ -265,17 +226,13 @@ function create() {
   player1 = new Player(1);
   player2 = new Player(2);
   // p1
+  player1.linkBase(base);
   player1.createPath(scene);
-  player1.createBase(scene);
-  player1.createResources(scene);
   player1.createHeroes(scene);
-  player1.createEnemies(scene);
   //p2
+  player2.linkBase(base);
   player2.createPath(scene);
-  player2.createBase(scene);
-  player2.createResources(scene);
   player2.createHeroes(scene);
-  player2.createEnemies(scene);
 
   playTone(this, 440, 0.1);
 }
@@ -326,6 +283,16 @@ function update(_time, delta) {
     entity.update(_time, delta);
   });
   drawGame();
+  if (enemiesCount <= 0 && !roundStarting) {
+    roundStarting = true;
+    round++;
+    enemiesCount = 0;
+    setTimeout(() => {
+      player1.createEnemies(scene);
+      player2.createEnemies(scene);
+      roundStarting = false;
+    }, 5000);
+  }
 }
 
 function drawGame() {
@@ -364,7 +331,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   attackTargets = [];
   targettable = [];
   currentTarget = null;
-  kind = ""; // path, hero, enemy, resource, base, ui
+  kind = ""; // path, hero, enemy,  base, ui
   attackRadius = 0.02;
   xpRadius = 0.1;
   hitboxRadius = 0.01;
@@ -379,7 +346,6 @@ class Entity extends Phaser.GameObjects.Sprite {
   speed = 40;
   level = 1;
   attackable = true;
-  generateResource = () => {}; //to be overridden by player
   onDeath = (killed, killer) => {}; // to be overridden by player
   spells = []; // to be overridden by player, must be 6
   walkAnimationPrefix = "";
@@ -491,13 +457,17 @@ class Entity extends Phaser.GameObjects.Sprite {
     if (!this.active) return;
     this.body.setVelocity(0, 0);
     this.attackable = false;
+    if (this.kind === CREEP) enemiesCount--;
     this.onDeath(this, by);
     this.destroy();
   }
 
   update(_time, delta) {
     if (this.kind === PATH) return;
-    if (this.kind === BASE) return;
+    if (this.kind === BASE) {
+      //generate points
+      return;
+    }
     if (this.currentTarget?.health <= 0) this.popTarget();
     if (!this.currentTarget || this.currentTarget.kind === PATH)
       this.lookForTargets();
@@ -513,7 +483,6 @@ class Entity extends Phaser.GameObjects.Sprite {
         this.walkTo(this.currentTarget);
       }
     } else {
-      if (this.kind === RESOURCE) return;
       if (this.kind === HERO) {
         this.appendTarget(this.player?.path[2]);
       }
@@ -529,7 +498,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       if (distance > this.visionRadius) continue;
       switch (this.kind) {
         case CREEP:
-          if (entity.kind === RESOURCE || entity.kind === HERO) {
+          if (entity.kind === HERO) {
             this.appendTarget(entity);
           }
           break;
@@ -563,7 +532,6 @@ class Player {
   constructor(id) {
     this.id = id;
     this.selection = null;
-    this.resources = [];
     this.heroes = [];
     this.faith = 0;
     this.luck = 0;
@@ -590,41 +558,22 @@ class Player {
     }
     this.entities = this.entities.filter((e) => e !== killed);
   }
+
+  linkBase(base) {
+    this.base = base;
+    this.entities.push(base);
+    this.select(base);
+  }
+
   createPath(scene) {
     const points = pathPoints[this.id % 2];
     points.forEach((point) => {
-      const pathEntity = new Entity(scene, point.x, point.y, PATH, "test");
+      const pathEntity = new Entity(scene, point.x, point.y, PATH, "");
       pathEntity.disappear();
       this.path.push(pathEntity);
     });
   }
 
-  createResources(scene) {
-    const x = 0.95 - this.mirror * 0.9;
-    let y = 0.33;
-    // Church
-    const church = new Entity(scene, x, y, RESOURCE, "church");
-    church.flipX = this.mirror;
-    church.onDeath = this.onEntityDeath.bind(this);
-    this.resources.push(church);
-    this.entities.push(church);
-    // Casino
-    y += 0.34;
-    const casino = new Entity(scene, x, y, RESOURCE, "casino");
-    church.flipX = this.mirror;
-    casino.onDeath = this.onEntityDeath.bind(this);
-    this.resources.push(casino);
-    this.entities.push(casino);
-  }
-  createBase(scene) {
-    let x = 0.8 - this.mirror * 0.6;
-    let y = 0.1;
-    const base = new Entity(scene, x, y, BASE, "test");
-    base.resize(0.4, 0.2);
-    this.base = base;
-    this.select(base);
-    this.entities.push(base);
-  }
   createEnemies(scene) {
     let currentPower = 0;
     let i = 0;
@@ -639,7 +588,6 @@ class Player {
       creep.walkAnimationPrefix = "goblin_walk";
       creep.attackAnimationPrefix = "goblin_attack";
       creep.targettable.push(...this.heroes);
-      creep.targettable.push(...this.resources);
       for (const hero of this.heroes) {
         hero.targettable.push(creep);
       }
@@ -740,6 +688,7 @@ class Player {
     let y_offset = cellSide * 2;
     //BG
     drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
+    const isBase = this.selection.kind === BASE;
     // portrait
     drawRect(
       0x00ff00,
@@ -747,8 +696,8 @@ class Player {
       y + y_offset,
       cellSide * 34,
       cellSide * 34,
-      this.selection.anims.currentFrame?.textureKey,
-      this.selection.anims.currentFrame?.textureFrame
+      isBase ? "castle" : this.selection.anims.currentFrame?.textureKey,
+      isBase ? undefined : this.selection.anims.currentFrame?.textureFrame
     );
     // icon 1
     x_offset += cellSide * 38;
@@ -923,4 +872,50 @@ function clearDrawn() {
   graphics.clear();
   drawnImages.forEach((img) => img.destroy());
   drawnImages = [];
+}
+
+function createBackground() {
+  // Create a RenderTexture that covers the screen
+  const width = config.width;
+  const height = config.height;
+
+  const rt = scene.add.renderTexture(0, 0, width, height).setOrigin(0, 0);
+
+  // Base green fill (the ground)
+  const baseColor = 0x6b9b40; // darker green
+  rt.fill(baseColor, 1);
+
+  // Create a Graphics object to draw grass blades
+  //const graphics = scene.add.graphics();
+
+  // Parameters
+  const grassCount = 5000; // number of grass blades
+  const grassColor = 0x5a8840; // lighter green
+
+  for (let i = 0; i < grassCount; i++) {
+    // Random position
+    const x = Phaser.Math.Between(0, width);
+    const y = Phaser.Math.Between(0, height);
+
+    // Random blade size
+    const h = Phaser.Math.Between(2, 8);
+    const w = 1;
+
+    graphics.fillStyle(grassColor, Phaser.Math.FloatBetween(0.4, 1));
+    graphics.fillRect(x, y, w, h);
+  }
+
+  // Draw the grass blades onto the render texture
+  rt.draw(graphics);
+
+  // Destroy the temporary graphics object
+  //graphics.destroy();
+
+  // Optional: Save it as a texture for reuse
+  //rt.saveTexture("grass-bg");
+}
+
+function createBase() {
+  const base = new Entity(scene, 0.5, 0.5, BASE, "castle");
+  return base;
 }
