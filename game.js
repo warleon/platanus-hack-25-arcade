@@ -1,6 +1,4 @@
 const ARCADE_CONTROLS = {
-  // ===== PLAYER 1 CONTROLS =====
-  // Joystick - Left hand on WASD
   P1U: ["w"],
   P1D: ["x"],
   P1L: ["a"],
@@ -10,8 +8,6 @@ const ARCADE_CONTROLS = {
   P1UL: ["q"],
   P1UR: ["e"],
 
-  // Action Buttons - Right hand on home row area (ergonomic!)
-  // Top row (ABC): U, I, O  |  Bottom row (XYZ): J, K, L
   P1A: ["r"],
   P1B: ["t"],
   P1C: ["y"],
@@ -19,11 +15,8 @@ const ARCADE_CONTROLS = {
   P1Y: ["g"],
   P1Z: ["h"],
 
-  // Start Button
   START1: ["s", "space"],
 
-  // ===== PLAYER 2 CONTROLS =====
-  // Joystick - Right hand on Arrow Keys
   P2U: ["8"],
   P2D: ["2"],
   P2L: ["4"],
@@ -33,8 +26,6 @@ const ARCADE_CONTROLS = {
   P2UL: ["7"],
   P2UR: ["9"],
 
-  // Action Buttons - Left hand (avoiding P1's WASD keys)
-  // Top row (ABC): R, T, Y  |  Bottom row (XYZ): F, G, H
   P2A: ["i"],
   P2B: ["o"],
   P2C: ["p"],
@@ -42,15 +33,12 @@ const ARCADE_CONTROLS = {
   P2Y: ["l"],
   P2Z: ["ñ"],
 
-  // Start Button
   START2: ["5", "0"],
 };
 
-// Build reverse lookup: keyboard key → arcade button code
 const KEYBOARD_TO_ARCADE = {};
 for (const [arcadeCode, keyboardKeys] of Object.entries(ARCADE_CONTROLS)) {
   if (keyboardKeys) {
-    // Handle both array and single value
     const keys = Array.isArray(keyboardKeys) ? keyboardKeys : [keyboardKeys];
     keys.forEach((key) => {
       KEYBOARD_TO_ARCADE[key] = arcadeCode;
