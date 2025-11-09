@@ -78,7 +78,7 @@ const GOLD_ICON =
   "UklGRrQAAABXRUJQVlA4TKcAAAAvD8ADAD+gFgAiSCN/j7b2BIK410VJBDSQo38kNB0owB61m1bTtgFzVQVV/kCq4hjzHzoEhLJ8mFOmTv0e3Ni2rTSPSP+x/muvM/hA73X89ZH/5r/CICL6PwxEtK1P2k2NexLh2gEfM229hlK8aOt0ycob9gdflsUFW1CshCueIRxY+cYTBAM847lUQS0Ze+VDWDL1MdgdzeFv0LXY81VaXjREeUzLCwA=";
 const SPELL_1_ICON =
   DATA_PREFIX +
-  "UklGRtYAAABXRUJQVlA4TMoAAAAvD8ADAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNbmttWxN0gHjNv0FsAMj3IbUuEO05+cICtgCHPx0ules/HktE9D8L1cK/WpNLlq3ITJZNG2yDMdkGdGxJangA4CpWF3oUgGp5GEZDfNYhIIoAOzCazjMEL4gWp2w4wJD4eUz7MJ3wM6eDT8uTyJODNONfcZ7vV8RFQfBUP53EReR7";
+  "UklGRoIAAABXRUJQVlA4THYAAAAvD8ADAC9ApG2TzMn80/s5Pr4ZMmkbaqX+RYx9kzIXZNI21EQVz3DfXfMfQKs4W/5rAlaRbacpCggZIAOJg8J/6PgX01cPEf2fAH5dk1A/K+AquArpA/gG7n1i51P8FEKWfBFSFrie5wBSBxSnd0op1c6OeFYJ";
 const SPELL_2_ICON =
   DATA_PREFIX +
   "UklGRrAAAABXRUJQVlA4TKMAAAAvD8ADAD9AqIEhwH0VoJP+m1JqIklhswY+EATQUmEBRZEkNZcT8YUL/MvCATX/Qd5kcB/aL9/9ng4bNrhtbbttvhx6ewXF1qBST32QA8Ta6XMBSm9/wPAMEf3P+lfroVZjPbS1Vi6MbduWcY/zWMrmItK4ldEBaQWnAKRgOaWQw24YWSDG8kcAyVzxAcDe6Ck4RAyR/zCfiOih1FgREV2rO/0BAA==";
@@ -97,10 +97,6 @@ const PLUS_ICON =
 const UP_ICON =
   DATA_PREFIX +
   "UklGRlAAAABXRUJQVlA4TEQAAAAvD8ADEB+gkG0EGB/Qef0CAcKVDD3uBQIpjmG05z8Asg8+qIkkKZrjBymoJrzaCAnnDiRE9H8C+BzATXAS+AJtQgJvbw==";
-
-const REROLL_ICON =
-  DATA_PREFIX +
-  "UklGRlwAAABXRUJQVlA4TE8AAAAvD8ADEB8gICH8H2aGzBISEP5PMkDzSUhAuOZ/ssj8B6C88YFRJElScpc/QlAxEtCBipGwErheNzZxENH/9GMsHIfoL2nX0IRPyC5lnZkGAA==";
 
 const MELEE_WALK =
   DATA_PREFIX +
@@ -174,13 +170,8 @@ let castleWaypoints = [];
 let neutrals = [];
 let gold = 0;
 const BUTTON_TO_INDEX = { A: 1, B: 2, C: 3, X: 4, Y: 5, Z: 6 };
-const SPELL_TYPES = { AOE_SELF: 0, AOE_RANDOM: 1, MASS_HEAL: 2 };
-const SPELL_DEFS = [
-  { id: 0, type: SPELL_TYPES.AOE_SELF },
-  { id: 1, type: SPELL_TYPES.AOE_RANDOM },
-  { id: 2, type: SPELL_TYPES.MASS_HEAL },
-];
-const SPELL_ICONS = ["spell1_icon", "spell2_icon", "spell3_icon"];
+const SPELL_TYPES = { AOE_RANDOM: 0, MASS_HEAL: 1 };
+const SPELL_ICONS = ["spell2_icon", "spell3_icon"];
 const HERO_UPGRADE_COST = {
   health: 50,
   mana: 50,
@@ -189,11 +180,15 @@ const HERO_UPGRADE_COST = {
   manaRegen: 50,
 };
 const BASE_COST = {
-  spell: [100, 120, 140],
-  goldRate: 150,
+  strike: 0,
+  spell: [100, 150],
+  goldRate: 50,
   maxHealth: 50,
   regen: 50,
 };
+const BASE_STRIKE_DAMAGE = 140;
+const HERO_SPELL_DAMAGE_BOOST = 12;
+const HERO_SPELL_HEAL_BOOST = 10;
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -751,7 +746,6 @@ class MainScene extends Phaser.Scene {
     this.load.image("mana_icon", MANA_ICON);
     this.load.image("plus_icon", PLUS_ICON);
     this.load.image("up_icon", UP_ICON);
-    this.load.image("reroll_icon", REROLL_ICON);
     this.load.spritesheet("melee_walk", MELEE_WALK, {
       frameWidth: 22,
       frameHeight: 26,
@@ -1726,9 +1720,11 @@ class Player {
 function handleBaseButton(player, base, button) {
   switch (button) {
     case 1:
+      performBaseStrike(base);
+      break;
     case 2:
     case 3:
-      upgradeBaseSpell(base, button - 1);
+      upgradeBaseSpell(base, button);
       break;
     case 4:
       upgradeBaseGold(base);
@@ -1753,7 +1749,7 @@ function handleHeroButton(player, hero, button) {
       heroUpgradeMaxMana(hero);
       break;
     case 3:
-      rerollHeroSpell(player, hero, 0);
+      empowerHeroSpell(player, hero, 0);
       break;
     case 4:
       heroUpgradeRegen(hero, "health");
@@ -1762,7 +1758,7 @@ function handleHeroButton(player, hero, button) {
       heroUpgradeRegen(hero, "mana");
       break;
     case 6:
-      rerollHeroSpell(player, hero, 1);
+      empowerHeroSpell(player, hero, 1);
       break;
     default:
       break;
@@ -1773,10 +1769,14 @@ function upgradeCost(baseCost, levelMultiplier) {
   return Math.floor(baseCost * levelMultiplier);
 }
 
-function upgradeBaseSpell(base, index) {
-  const cost = getBaseActionCost(base, index + 1);
+function upgradeBaseSpell(base, button) {
+  const spellIndex = button - 2;
+  if (spellIndex < 0) {
+    return;
+  }
+  const cost = getBaseActionCost(base, button);
   if (!spendGold(cost)) return;
-  base.spellLevels[index] = (base.spellLevels[index] || 0) + 1;
+  base.spellLevels[spellIndex] = (base.spellLevels[spellIndex] || 0) + 1;
   [player1, player2].forEach((p) => {
     if (!p) return;
     p.heroes.forEach((hero) => ensureHeroSpellSlots(hero, p));
@@ -1807,6 +1807,32 @@ function upgradeBaseRegen(base) {
   base.healthRegenPerSec = (base.healthRegenPerSec || 0) + 1;
 }
 
+function performBaseStrike(base) {
+  if (!base) return;
+  const cost = getBaseActionCost(base, 1);
+  if (!spendGold(cost)) return;
+  let target = randomGlobalCreep();
+  if (!target) return;
+  const damage = getBaseStrikeDamage(base);
+  const fx = base.scene?.add.graphics();
+  if (fx) {
+    fx.lineStyle(3, 0xfff066, 0.9);
+    fx.beginPath();
+    fx.moveTo(base.x, base.y);
+    fx.lineTo(target.x, target.y);
+    fx.strokePath();
+    base.scene.time.delayedCall(120, () => fx.destroy());
+  }
+  flashTint(target, 0xfff066, 220);
+  playHitSound(base.scene, 720);
+  target.takeDamage(damage, base);
+}
+
+function getBaseStrikeDamage(_base) {
+  const roundBonus = Math.max(0, round - 1) * 4;
+  return BASE_STRIKE_DAMAGE + roundBonus;
+}
+
 function heroUpgradeMaxHealth(hero) {
   const cost = getHeroActionCost(hero, 1);
   if (!spendGold(cost)) return;
@@ -1834,11 +1860,28 @@ function heroUpgradeRegen(hero, type) {
   }
 }
 
-function rerollHeroSpell(player, hero, slot) {
-  if (!player?.base?.spellLevels?.some((lvl) => lvl > 0)) return;
+function empowerHeroSpell(player, hero, slot) {
+  if (
+    !player?.base?.spellLevels?.some((lvl) => lvl > 0) ||
+    !hero?.spells ||
+    !hero.spells[slot]
+  ) {
+    return;
+  }
   const cost = getHeroActionCost(hero, slot === 0 ? 3 : 6);
   if (!spendGold(cost)) return;
-  assignHeroSpell(hero, player, slot, true);
+  const spell = hero.spells[slot];
+  const bonus =
+    spell.type === SPELL_TYPES.MASS_HEAL
+      ? HERO_SPELL_HEAL_BOOST
+      : HERO_SPELL_DAMAGE_BOOST;
+  spell.baseValue = (spell.baseValue || 0) + bonus;
+  flashTint(
+    hero,
+    spell.type === SPELL_TYPES.MASS_HEAL ? 0x66ffdd : 0xffc04d,
+    220
+  );
+  playLevelSound(hero.scene);
 }
 
 function getUnlockedSpellIds(player) {
@@ -1880,18 +1923,11 @@ function createSpellInstance(id) {
     case 0:
       return {
         id,
-        type: SPELL_TYPES.AOE_SELF,
-        radius: Phaser.Math.Between(60, 140),
-        baseValue: Phaser.Math.Between(30, 60),
-      };
-    case 1:
-      return {
-        id,
         type: SPELL_TYPES.AOE_RANDOM,
         radius: Phaser.Math.Between(80, 180),
-        baseValue: Phaser.Math.Between(25, 55),
+        baseValue: Phaser.Math.Between(40, 70),
       };
-    case 2:
+    case 1:
       return {
         id,
         type: SPELL_TYPES.MASS_HEAL,
@@ -1942,9 +1978,6 @@ function executeHeroSpell(hero, spell) {
   const { potency } = getSpellStats(hero, spell);
   if (!potency) return false;
   switch (spell.type) {
-    case SPELL_TYPES.AOE_SELF:
-      castAreaDamage(hero.x, hero.y, spell.radius, potency, hero);
-      return true;
     case SPELL_TYPES.AOE_RANDOM: {
       const target = randomCreepInRange(hero, hero.visionRadius);
       if (!target) return false;
@@ -1975,6 +2008,14 @@ function castAreaDamage(cx, cy, radius, damage, caster) {
       creep.takeDamage(damage, caster);
     }
   });
+}
+
+function randomGlobalCreep() {
+  const candidates = neutrals.filter(
+    (creep) => creep && creep.kind === KIND.CREEP && creep.health > 0
+  );
+  if (!candidates.length) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function randomCreepInRange(hero, maxRadius) {
@@ -2163,11 +2204,13 @@ function getBaseActionCost(base, button) {
   if (!base) return null;
   switch (button) {
     case 1:
+      return BASE_COST.strike;
     case 2:
     case 3:
+      const spellIndex = button - 2;
       return (
-        BASE_COST.spell[button - 1] *
-        ((base.spellLevels?.[button - 1] || 0) + 1)
+        (BASE_COST.spell[spellIndex] || 0) *
+        ((base.spellLevels?.[spellIndex] || 0) + 1)
       );
     case 4:
       return BASE_COST.goldRate * (base.goldUpgradeLevel + 1);
@@ -2227,6 +2270,15 @@ function getHeroButtonConfigs(hero, player) {
     iconConfig(primary, -6),
     iconConfig(secondary, 6),
   ];
+  const spellUpgradeConfig = (slot) => ({
+    icons: [
+      iconConfig(spellIconForSlot(hero, slot), -6),
+      iconConfig("up_icon", 6),
+    ],
+    cost: hero.spells?.[slot]
+      ? getHeroActionCost(hero, slot === 0 ? 3 : 6)
+      : "LOCK",
+  });
   const configs = [
     {
       icons: baseCombo("heart_icon", "up_icon"),
@@ -2236,13 +2288,7 @@ function getHeroButtonConfigs(hero, player) {
       icons: baseCombo("mana_icon", "up_icon"),
       cost: getHeroActionCost(hero, 2),
     },
-    {
-      icons: [
-        iconConfig(spellIconForSlot(hero, 0), -6),
-        iconConfig("reroll_icon", 6),
-      ],
-      cost: getHeroActionCost(hero, 3),
-    },
+    spellUpgradeConfig(0),
     {
       icons: baseCombo("heart_icon", "plus_icon"),
       cost: getHeroActionCost(hero, 4),
@@ -2251,19 +2297,8 @@ function getHeroButtonConfigs(hero, player) {
       icons: baseCombo("mana_icon", "plus_icon"),
       cost: getHeroActionCost(hero, 5),
     },
-    {
-      icons: [
-        iconConfig(spellIconForSlot(hero, 1), -6),
-        iconConfig("reroll_icon", 6),
-      ],
-      cost: getHeroActionCost(hero, 6),
-    },
+    spellUpgradeConfig(1),
   ];
-  const unlocked = getUnlockedSpellIds(player);
-  if (!unlocked.length) {
-    configs[2].cost = "LOCK";
-    configs[5].cost = "LOCK";
-  }
   return configs;
 }
 
@@ -2542,6 +2577,6 @@ function createBase() {
   base.goldUpgradeLevel = 0;
   base.maxHealthLevel = 0;
   base.regenLevel = 0;
-  base.spellLevels = [0, 0, 0];
+  base.spellLevels = [0, 0];
   return base;
 }
