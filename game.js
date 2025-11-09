@@ -121,6 +121,24 @@ const pathPoints = [
   ],
 ];
 
+const CASTLE_CORNERS = [
+  { x: 0.45, y: 0.45 },
+  { x: 0.55, y: 0.45 },
+  { x: 0.55, y: 0.55 },
+  { x: 0.45, y: 0.55 },
+];
+
+const HORDE_LANES = [
+  { spawn: { x: 0.3, y: -0.05 }, cornerIndex: 0 },
+  { spawn: { x: 0.7, y: -0.05 }, cornerIndex: 1 },
+  { spawn: { x: 1.05, y: 0.3 }, cornerIndex: 1 },
+  { spawn: { x: 1.05, y: 0.7 }, cornerIndex: 2 },
+  { spawn: { x: 0.7, y: 1.05 }, cornerIndex: 2 },
+  { spawn: { x: 0.3, y: 1.05 }, cornerIndex: 3 },
+  { spawn: { x: -0.05, y: 0.7 }, cornerIndex: 3 },
+  { spawn: { x: -0.05, y: 0.3 }, cornerIndex: 0 },
+];
+
 // anim states: idle, walk, attack, die
 const IDLE = "idle";
 const WALK = "walk";
@@ -142,6 +160,8 @@ let drawnImages = [];
 let enemiesCount = 0;
 let roundStarting = false;
 let controllerMode = { P1: true, P2: true };
+let defenderUnits = [];
+let castleWaypoints = [];
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -666,6 +686,9 @@ class MainScene extends Phaser.Scene {
     graphics = this.add.graphics();
     createBackground();
     const base = createBase();
+    this.baseEntity = base;
+    this.castleWaypoints = createCastleWaypoints(scene);
+    this.defenders = [];
     this.isPaused = false;
     this.pauseMenu = null;
     this.pauseSelection = 0;
@@ -675,6 +698,7 @@ class MainScene extends Phaser.Scene {
       "Main Menu (no record)",
       "Finish Run (record names)",
     ];
+    this.gameEnded = false;
 
     createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
     createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
@@ -699,11 +723,11 @@ class MainScene extends Phaser.Scene {
     player1 = new Player(1);
     player2 = new Player(2);
     player1.linkBase(base);
-    player1.createPath(scene);
-    player1.createHeroes(scene);
     player2.linkBase(base);
-    player2.createPath(scene);
-    player2.createHeroes(scene);
+
+    this.defenders = createDefenderFormation(scene);
+    linkDefendersToPlayers(this.defenders);
+    base.onDeath = () => this.handleCastleDestroyed();
 
     playTone(this, 440, 0.1);
 
@@ -730,13 +754,13 @@ class MainScene extends Phaser.Scene {
       player2 = null;
       scene = null;
     });
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard.off("keydown", this.handleArcadeInput, this);
-    });
   }
 
   update(_time, delta) {
     if (this.isPaused) {
+      return;
+    }
+    if (this.gameEnded) {
       return;
     }
     if (player1) {
@@ -754,19 +778,24 @@ class MainScene extends Phaser.Scene {
       roundStarting = true;
       round++;
       enemiesCount = 0;
-      setTimeout(() => {
-        if (player1) {
-          player1.createEnemies(scene);
-        }
-        if (player2) {
-          player2.createEnemies(scene);
+      this.time.delayedCall(4000, () => {
+        if (!this.gameEnded) {
+          spawnEnemyWave(
+            this,
+            this.defenders,
+            this.baseEntity,
+            this.castleWaypoints
+          );
         }
         roundStarting = false;
-      }, 5000);
+      });
     }
   }
 
   handleArcadeInput(event) {
+    if (this.gameEnded) {
+      return;
+    }
     const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
     if (key === "START1" || key === "START2") {
       if (event.preventDefault) {
@@ -826,6 +855,9 @@ class MainScene extends Phaser.Scene {
   }
 
   openPauseMenu() {
+    if (this.gameEnded) {
+      return;
+    }
     if (this.pauseMenu) {
       return;
     }
@@ -936,14 +968,50 @@ class MainScene extends Phaser.Scene {
         break;
       case 2:
         this.closePauseMenu();
-        this.scene.start("EndScene", {
-          round: round,
-          controllers: { ...controllerMode },
-        });
+        this.concludeRun();
         break;
       default:
         this.closePauseMenu();
     }
+  }
+
+  concludeRun(message) {
+    if (this.gameEnded) {
+      return;
+    }
+    this.gameEnded = true;
+    this.isPaused = true;
+    if (this.pauseMenu) {
+      this.pauseMenu.destroy();
+      this.pauseMenu = null;
+      this.pauseOptionTexts = [];
+    }
+    if (this.physics.world && !this.physics.world.isPaused) {
+      this.physics.world.pause();
+    }
+    let banner = null;
+    if (message) {
+      banner = this.add
+        .text(config.width / 2, config.height / 2, message, {
+          fontSize: "40px",
+          color: "#ff7676",
+          fontStyle: "bold",
+          backgroundColor: "#000000aa",
+          padding: { x: 16, y: 8 },
+        })
+        .setOrigin(0.5);
+    }
+    this.time.delayedCall(message ? 1500 : 200, () => {
+      banner?.destroy();
+      this.scene.start("EndScene", {
+        round,
+        controllers: { ...controllerMode },
+      });
+    });
+  }
+
+  handleCastleDestroyed() {
+    this.concludeRun("Castle Destroyed!");
   }
 }
 
@@ -1154,9 +1222,6 @@ class Entity extends Phaser.GameObjects.Sprite {
         this.walkTo(this.currentTarget);
       }
     } else {
-      if (this.kind === HERO) {
-        this.appendTarget(this.player?.path[2]);
-      }
       this.idle();
     }
   }
@@ -1169,7 +1234,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       if (distance > this.visionRadius) continue;
       switch (this.kind) {
         case CREEP:
-          if (entity.kind === HERO) {
+          if (entity.kind === HERO || entity.kind === BASE) {
             this.appendTarget(entity);
           }
           break;
@@ -1234,6 +1299,18 @@ class Player {
     this.base = base;
     this.entities.push(base);
     this.select(base);
+  }
+
+  addControllable(entity) {
+    if (!entity) {
+      return;
+    }
+    if (!this.entities.includes(entity)) {
+      this.entities.push(entity);
+    }
+    if (entity.kind === HERO && !this.heroes.includes(entity)) {
+      this.heroes.push(entity);
+    }
   }
 
   createPath(scene) {
@@ -1586,7 +1663,119 @@ function createBackground() {
   //rt.saveTexture("grass-bg");
 }
 
+function clampToArena(vec) {
+  return new Phaser.Math.Vector2(
+    Phaser.Math.Clamp(vec.x, 0.08, 0.92),
+    Phaser.Math.Clamp(vec.y, 0.08, 0.92)
+  );
+}
+
+function createHeroUnit(scene, position, type) {
+  const texture = type === "range" ? "range_walk" : "melee_walk";
+  const hero = new Entity(scene, position.x, position.y, HERO, texture);
+  hero.walkAnimationPrefix = texture;
+  hero.attackAnimationPrefix = type === "range" ? "range_attack" : "melee_attack";
+  hero.damage = type === "range" ? 40 : 60;
+  hero.health = hero.maxhealth = type === "range" ? 80 : 120;
+  hero.attackRadius = type === "range" ? 0.25 : 0.08;
+  hero.visionRadius = type === "range" ? 0.4 : 0.2;
+  hero.hitboxRadius = 0.02;
+  hero.attackable = true;
+  return hero;
+}
+
+function createDefenderFormation(scene) {
+  const defenders = [];
+  HORDE_LANES.forEach((lane) => {
+    const center = new Phaser.Math.Vector2(0.5, 0.5);
+    const spawnVector = new Phaser.Math.Vector2(lane.spawn.x, lane.spawn.y);
+    const direction = spawnVector.clone().subtract(center).normalize();
+    const rangePos = clampToArena(
+      center.clone().add(direction.clone().scale(0.18))
+    );
+    const meleePos = clampToArena(
+      center.clone().add(direction.clone().scale(0.32))
+    );
+    defenders.push(
+      createHeroUnit(scene, rangePos, "range"),
+      createHeroUnit(scene, meleePos, "melee")
+    );
+  });
+  defenderUnits = defenders;
+  return defenders;
+}
+
+function createCastleWaypoints(scene) {
+  castleWaypoints = CASTLE_CORNERS.map((corner) => {
+    const marker = new Entity(scene, corner.x, corner.y, PATH, "");
+    marker.disappear();
+    return marker;
+  });
+  return castleWaypoints;
+}
+
+function linkDefendersToPlayers(defenders) {
+  defenders.forEach((hero) => {
+    player1?.addControllable(hero);
+    player2?.addControllable(hero);
+  });
+}
+
+function spawnEnemyWave(scene, defenders, base, waypoints) {
+  if (
+    !base ||
+    !defenders ||
+    !defenders.length ||
+    !waypoints ||
+    !waypoints.length
+  ) {
+    return;
+  }
+  HORDE_LANES.forEach((lane) => {
+    const spawn = lane.spawn;
+    const creep = new Entity(scene, spawn.x, spawn.y, CREEP, "goblin_walk");
+    creep.walkAnimationPrefix = "goblin_walk";
+    creep.attackAnimationPrefix = "goblin_attack";
+    creep.damage = 10 + round * 2;
+    creep.health = creep.maxhealth = 80 + round * 5;
+    creep.attackRadius = 0.08;
+    creep.visionRadius = 0.4;
+    creep.hitboxRadius = 0.02;
+    creep.targettable.push(...defenders, base);
+    defenders.forEach((hero) => {
+      if (!hero || !hero.targettable) {
+        return;
+      }
+      if (!hero.targettable.includes(creep)) {
+        hero.targettable.push(creep);
+      }
+    });
+    const waypoint = waypoints[lane.cornerIndex];
+    if (waypoint) {
+      creep.appendTarget(waypoint);
+    }
+    creep.appendTarget(base);
+    creep.onDeath = () => {
+      defenders.forEach((hero) => {
+        if (!hero || !hero.targettable) {
+          return;
+        }
+        const idx = hero.targettable.indexOf(creep);
+        if (idx >= 0) {
+          hero.targettable.splice(idx, 1);
+        }
+      });
+    };
+    enemiesCount++;
+  });
+}
+
 function createBase() {
   const base = new Entity(scene, 0.5, 0.5, BASE, "castle");
+  base.setScale(3);
+  base.maxhealth = 800;
+  base.health = base.maxhealth;
+  base.hitboxRadius = 0.08;
+  base.attackable = true;
   return base;
 }
