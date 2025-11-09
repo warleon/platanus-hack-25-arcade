@@ -321,6 +321,35 @@ class StartScene extends Phaser.Scene {
     this.drawController(200, "JUGADOR 1", "left", "P1");
     this.drawController(600, "JUGADOR 2", "right", "P2");
   }
+  createLetterGrid(startX, startY, side) {
+    const letters = side === "left" ? "qweasdzxc" : "789456123";
+    const cellSize = 35;
+    const texts = [];
+
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (row === 1 && col === 1) continue; // skip the center
+        const i = row * 3 + col;
+        const c = letters[i];
+        if (!c) continue;
+
+        const text = centeredText(
+          this,
+          startX + (col - 1) * cellSize,
+          startY + (row - 1) * cellSize,
+          c,
+          {
+            fontSize: "18px",
+            color: "#ffffff",
+          }
+        );
+
+        texts.push(text);
+      }
+    }
+
+    return texts;
+  }
 
   drawController(x, label, layout, key) {
     const container = this.add.container(x, 340);
@@ -338,8 +367,12 @@ class StartScene extends Phaser.Scene {
     const stickBase = this.add.circle(joystickX, 40, 45, 0x1a1a1a);
     const stick = this.add.rectangle(joystickX, -5, 12, 100, 0x555555);
     const knob = this.add.circle(joystickX, -90, 28, 0x3b7bff);
-    [stickBase, stick, knob].forEach((part) => container.add(part));
+    const letters = this.createLetterGrid(joystickX, 40, side);
+    [[stickBase, stick, knob, ...letters]].forEach((part) =>
+      container.add(part)
+    );
 
+    const buttons = side === "left" ? "rtyfgh" : "iopklñ";
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 3; col++) {
         const btn = this.add.circle(
@@ -349,13 +382,26 @@ class StartScene extends Phaser.Scene {
           0x0f49bf
         );
         btn.setStrokeStyle(2, 0x6fb1ff);
+        const buttonLable = centeredText(
+          this,
+          buttonStartX + col * 45,
+          10 + row * 45,
+          buttons[row * 3 + col]
+        );
         container.add(btn);
+        container.add(buttonLable);
       }
     }
 
     const startButton = this.add
       .circle(startX, startY, 24, 0x333333)
       .setStrokeStyle(2, 0xffff00);
+    const letter = centeredText(
+      this,
+      startX,
+      startY,
+      side === "left" ? "s" : "5"
+    );
     const startLabel = centeredText(this, startX, startY + 35, "INICIO", {
       fontSize: "18px",
       color: "#ffff00",
@@ -369,6 +415,7 @@ class StartScene extends Phaser.Scene {
 
     container.add(startButton);
     container.add(startLabel);
+    container.add(letter);
     container.add(title);
     this.startButtons[key] = startButton;
   }
