@@ -726,7 +726,7 @@ class MainScene extends Phaser.Scene {
     player2.linkBase(base);
 
     this.defenders = createDefenderFormation(scene);
-    linkDefendersToPlayers(this.defenders);
+    assignDefendersToPlayers(this.defenders);
     base.onDeath = () => this.handleCastleDestroyed();
 
     playTone(this, 440, 0.1);
@@ -1714,10 +1714,28 @@ function createCastleWaypoints(scene) {
   return castleWaypoints;
 }
 
-function linkDefendersToPlayers(defenders) {
+function assignDefendersToPlayers(defenders) {
+  const activeP1 = controllerMode.P1;
+  const activeP2 = controllerMode.P2;
   defenders.forEach((hero) => {
-    player1?.addControllable(hero);
-    player2?.addControllable(hero);
+    if (!hero) {
+      return;
+    }
+    const normalizedX = hero.x / config.width;
+    if (activeP1 && activeP2) {
+      if (normalizedX < 0.5) {
+        player1?.addControllable(hero);
+      } else {
+        player2?.addControllable(hero);
+      }
+    } else if (activeP1) {
+      player1?.addControllable(hero);
+    } else if (activeP2) {
+      player2?.addControllable(hero);
+    } else {
+      player1?.addControllable(hero);
+      player2?.addControllable(hero);
+    }
   });
 }
 
