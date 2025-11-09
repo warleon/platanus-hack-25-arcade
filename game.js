@@ -72,33 +72,31 @@ const DATA_PREFIX = "data:image/webp;base64,";
 const CASTLE =
   DATA_PREFIX +
   "UklGRt4CAABXRUJQVlA4TNICAAAvK8AKEGegJpIk5Rjii07Ax+xf2CtRU9tqw8hhrgogRUD3P0RNJKiJJLf5TjlUgiAG4o/FNFzNfwDA6Lc4GBBFgPgqgd9ob0nqj2f+8+6CXPf/27j5p/dEdJMPntLbFj+BE7nBU4pc0t3LFAYHkMJNLgBJcLoCSASnFNtJNqUdhX+eTuJdXiGi/wrbtm1k1BltfQgABNBP/fKWT/yHT15e8HLkPzUe8eph3L8sb1R5wfzRxnDfOr8xPwzw/jBefwFIkOAlvPRv+fDlRgwQHE3Gd0ARRcx5c8GSl88mR0oOf2yQTFtpsFv8zsTy0cZAySihQ0LyAyGFEDJthDQs6XIRsj5KXcKHSpCx8Df6cpglUVRZquRdjtrH3cPadGX2Ixdd6/foXDrDzwGAwAn0VFjUWst8okJpitYD0SLqnFYYpN4zaZ0X65tk1O81elB62lv3wRaoe4xL74lGTxp3vfUoTihrEC1W35zMvaDlPz3fvHiN+UrF0xEqe47WqDV5eRYgmI8nELWzTqNDRLu8EQPM78zHWYHOswzdq8Mf82c+bfzYiP9omemekJc/4o14+Wh9fj53iM7D4uHLnfl5WC7f/XRjY5jbfAw1kvmX88NQPCWMNGvEEEJrTUV2w3g4hMwodqB5w/7GA64UUhQ8BOOSeidLTWLSRJnUNBuSlfZQsUfjT8bHx7130V5RS0KgNRUx2VVCo5RS8rRb46chDzmrMy75XJRxxoWYG+XngJqkzozJZlvYNsakIjUlTZtMi9Gm2a/tula6qxpFyk8DzZL6QY2aXUJoi++qNM1mSktmptlsWzXJ9WYz7RjWsKy0ZKbOFJf0+o3dXZkJwcz0OUgLNV2Xku1ejyiVStYLw4dgVvOISj5drWmdsXZHTg8BbyhGCCE3u4pcv/H45p4xLIQPyUwIAEEzivZOA0CQcXYCgBCoyAv8XQEBOQG9ClqEeAYAAA==";
-const HEALING_ICON =
-  DATA_PREFIX +
-  "UklGRl4BAABXRUJQVlA4TFEBAAAvH8AHEEegIACQhPr/jRENxhy1bdswPtl/Z+wVUBpJknKUf3bnLgFy9C/nPwDgqzZ+Lk7LSIiecr5lFsDRtrdtQ6ccQOXJnKjNieC2RoQ8N8J7hS7gh/CeIp2bpMsRIvqvsG3bhkm6xx/qMwuiBsiy+kmpDTFby8xsmSdqCYC/w1Vcts8AGvtrfQcHvNXPf4bqWu/ALOA/kbOEzd7vX7ooOgdPVvugf4uinfj3qr3f75xv23uHYRiEU4el943fxySKvpBlkMfIIgpiL+L0g6ShyHpyuUu6KtQ4pbfIYufDXBEe+2v6aIWD5kAeTbjjci0yZfDgsGfHdodpEftmU522xZr5gJlrVkQTonzNi7zRGEWaNqVXZDUSIhqitdNkmWmICIM55VlmWgIiolq3ps0zQ0RUAGhsyWBeAhG1LYZRr5eg8Ubkk1cFtyNX6j27GU8KAA==";
 
-const HIT_ICON =
+const GOLD_ICON =
   DATA_PREFIX +
-  "UklGRrwAAABXRUJQVlA4TK8AAAAvH8AHECegkI0kOLavxuqcwpFJ2/RvdU7GtCto24ZNtfsP3OY/ANS+u9v5Hhw0kiQ3JxnB3JrArQPA6w4BJ8uf1D15EET0fwLKyfJWCoBpCJSzu3PPvDNg45PxRPqS2uR+xrcCg2AWGi94DbB4z6pMUmAjvTIlMNHbKH71BIsB1l4pLSmQ3OvCOFho7hIrjteVOK68vC5l5uMXzTMz9x/E8UfnJ1vpml+AAaWcLG8FAA==";
-
-const THUNDER_ICON =
+  "UklGRrQAAABXRUJQVlA4TKcAAAAvD8ADAD+gFgAiSCN/j7b2BIK410VJBDSQo38kNB0owB61m1bTtgFzVQVV/kCq4hjzHzoEhLJ8mFOmTv0e3Ni2rTSPSP+x/muvM/hA73X89ZH/5r/CICL6PwxEtK1P2k2NexLh2gEfM229hlK8aOt0ycob9gdflsUFW1CshCueIRxY+cYTBAM847lUQS0Ze+VDWDL1MdgdzeFv0LXY81VaXjREeUzLCwA=";
+const SPELL_1_ICON =
   DATA_PREFIX +
-  "UklGRlYBAABXRUJQVlA4TEkBAAAvH8AHAE+gNAAIKYnSL9rE/tUg3DOMkQZoHKMBGoci6ps9w/1TmGmA5OVn/FTgpIGVzGsAK8x/zN/sCIjLIA9JdFGuP6sXANfW3kZKZmqR6RZ5QztnhJezHUFTTDnrEaHLTGuSXZMpc5jnTaQXiOj/BOA/HTvrjSG2GmCe97Dxmffdb7luXndW8t0zVFXOl3PXxcrQBt4HgfUjYQUiusD7vIcNI2cVNo6c7TWj3FIVKcRza50NWqWIhkohRnaPKtQbxQrxfDzsjiGiHrImClfxcI9QRUYGJcLO4Ug3ItKGeGBIkRwGfSJDOuGEtdZET0QkYpgzETF6fK+vDemMOYsTbehwhF6NWZE4K4SF9c1anxORbFfKcQogLCy1szAKsC4iElcAZOsAqYhIUX4GmIb0uahdgqR4LpbSBunVMiwtPpceqxevHr/ZAAA=";
-
-const RADIAL_ICON =
+  "UklGRtYAAABXRUJQVlA4TMoAAAAvD8ADAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNbmttWxN0gHjNv0FsAMj3IbUuEO05+cICtgCHPx0ules/HktE9D8L1cK/WpNLlq3ITJZNG2yDMdkGdGxJangA4CpWF3oUgGp5GEZDfNYhIIoAOzCazjMEL4gWp2w4wJD4eUz7MJ3wM6eDT8uTyJODNONfcZ7vV8RFQfBUP53EReR7";
+const SPELL_2_ICON =
   DATA_PREFIX +
-  "UklGRvABAABXRUJQVlA4TOQBAAAvH8AHAF+goI0k5fju+Y28nPdvhGwoaCSpEfC9vwXU4N8MKGzbtslOuvtDD+j/ry1g/mPQOmOSF1zNAfD/9/dIbfygepuF3fYNkrRtchoHxjnTLWevaF3AotAJVO1ZzzMN3iYG52x36WE1K4R8AauYrVOjjXNQXc+PzxDR/wmIogvRf345EpnEGK3MZDIyRmt9LTU61UkGAKPUpNqoU6nRKQAAjI3RyqRGxQC7mANcSrXWSqcZ7CIWU8hirYzWCsaI1jmAsVImvT0BRFciIoCKVJzlM0REhziFkVIZACK6vQIxH42VBrCuwjd005aIuZrADNEVVJO16OBQBrPKoq/JbxcWp9cALDrnieietS6HnQqx+Ei0ILqBOM3hvcXCU9vNaRt/lfkDxKoiWnE3J1thfrtwBVG7Yp5TaavzM2c9fWxD6Duiop7u4T0ivwp9WHoqSyyw9vcWHPqBie7VV388Ilq0PHDo73uq35atv9euAm965nt0rzns6V7H/SBrZqqpOVzfW3TMG5Gel56ah+3vruMgIgdhef9j8+LF/DP/Y+iXXd08v9WtOPyVRNYcNnHz4iG94yCnki8i/PfipevNzp/1X/kafZE+DB/3L8Ynet6IRCIHQ/Ank3v7GxE5JV9ERLqH";
-
-const ANIMATION_BATCHES = [
-  ["melee_walk", ["up", "left", "down", "right"], 4],
-  ["melee_attack", ["up", "left", "down", "right"], 3],
-  ["melee_walk", ["idle"], 1, 9],
-  ["range_walk", ["up", "left", "down", "right"], 4],
-  ["range_attack", ["up", "left", "down", "right"], 3],
-  ["range_walk", ["idle"], 1, 9],
-  ["goblin_walk", ["up", "left", "down", "right"], 4],
-  ["goblin_attack", ["up", "left", "down", "right"], 3],
-  ["goblin_walk", ["idle"], 1, 9],
-];
+  "UklGRrAAAABXRUJQVlA4TKMAAAAvD8ADAD9AqIEhwH0VoJP+m1JqIklhswY+EATQUmEBRZEkNZcT8YUL/MvCATX/Qd5kcB/aL9/9ng4bNrhtbbttvhx6ewXF1qBST32QA8Ta6XMBSm9/wPAMEf3P+lfroVZjPbS1Vi6MbduWcY/zWMrmItK4ldEBaQWnAKRgOaWQw24YWSDG8kcAyVzxAcDe6Ck4RAyR/zCfiOih1FgREV2rO/0BAA==";
+const SPELL_3_ICON =
+  DATA_PREFIX +
+  "UklGRroAAABXRUJQVlA4TK0AAAAvD8ADEEegIACQhPr/jRENxhy1bdswPtl/Z+wVUBpJknKUf3bnLgFy9C/nPwDgqzZ+Lk7LSIiecr5lFrixbdtJUEfwSL1PBxD/hzr3Lh725DpTG+/AHURE/9Ng5suBt6fwDQA6jADA78I31hF+FwAu/dC90No0/7onUouqX9uvNhHNbb+4RPv50S+JReGc96226FrkhT5aJKICzqJI7oozJXKJlRKJoyji0/VvBwA=";
+const HEART_ICON =
+  DATA_PREFIX +
+  "UklGRoQAAABXRUJQVlA4THcAAAAvD8ADEDegpm0jqA/rgq063nxoiEYw/iT7JzvZR6WmkRToPsxjCTcooKeZ/wBwn9uKm1W+rzlgFdu2ko3dBCQgARE0gJ73jd7+HdAIEf2fgLLroFdWSbC45YVOgjwfdbrks25/CF9sCXcsFweCdBqwSM7VT/uAAwA=";
+const MANA_ICON =
+  DATA_PREFIX +
+  "UklGRrQAAABXRUJQVlA4TKcAAAAvD8ADEIegJpKk6PL/wlcEDvCfYwINFDrURLLVXPVFpJ7oIElAA+YxQaMmAJCGWQACDH9C2D+INljX/AcA/j9xB0rIn5tu4nxnTIuGDA0yysRyZXsc+zZRBYaRJEVZ/nNZxPzT5U4NIaL/EwCgdbe1BjeHtQbFjwCdZoj3PuZ/d0qSSHPWkkvS7AsJaT/JkUQar/0wHsOTXqUPc5oxHoMAOWISp8UAAAA=";
+const PLUS_ICON =
+  DATA_PREFIX +
+  "UklGRkgAAABXRUJQVlA4TDwAAAAvD8ADEBcgEEjy59tnDQFB0XuzCQSSYOebcf4DvjUoaCNJmWfQ98JexuZ0PjqI6P8E8HkkUF9MswvUQR0=";
+const UP_ICON =
+  DATA_PREFIX +
+  "UklGRlAAAABXRUJQVlA4TEQAAAAvD8ADEB+gkG0EGB/Qef0CAcKVDD3uBQIpjmG05z8Asg8+qIkkKZrjBymoJrzaCAnnDiRE9H8C+BzATXAS+AJtQgJvbw==";
 
 const MELEE_WALK =
   DATA_PREFIX +
@@ -122,6 +120,18 @@ const GOBLIN_WALK =
 const GOBLIN_ATTACK =
   DATA_PREFIX +
   "UklGRm4FAABXRUJQVlA4TGEFAAAvXMAdECegkG0EOHQvw/kcmbRNa6f25n6XmrYNWJyzBOb8B8DUZj+wg/fatvLWtraty3IAcHAAWtMKQLgRgKbo+Qe1Cwx5na/fEf134LZtGNG7+tz+RP8T+eyx00Oe3zvsR8RD/uo77bm2z/STzuhLsNwcDm6b/YJF0ulZpRH543lutrsrDUk6n5I2PwRx0e1noBnG0lPSZd9JfIKHbnsNnJJsP2+9u9voY/s5mtLdAChllCt8gofuBkApk8svIKoK8PE61tZfQFhHH7+pJQCu6UGf8Ztb+vhVgTw7AJY+TmkrFciBrXegeBqiAuXYl+n7bVC8aE4ar9dRagCNPj3r5voLB2Pew/GVowDUMqqjrClpUBTkXCuQXpMCoCDpVW9aR7nCg3yLCjxCdNufWel2i/3aLZTett3WmW+Iy3ZIm98/fmpMqra9RDaXP37eeMhTS7/W4UfsIe+hA6kWTfldtcUqUi+hilSZHCxKhIMiVWJNqm3WFyXW0EuqLZSylJZJYlHqobRItejvkvX/JT+Pv5TyErvsyPmUUl5iNEKb7agsiUbcQFhXYG4grANYo87ZLeqndADr9xKtrEFbX6jE8wOMPavczNxjFVjirdxv/HYgeImdg98OfH19wjRHX13H+3p1KPO2JNWbrdTpr0lya/eODu1utAn8RtdndPSojgzMClBuJPLNw0GbbZXi2l/ztpQqdGqJrqHM41ELlRaw+tCVQO7RkMjzw2nbTxfRScwP2x+7vgKVRl9n+7Uv6m65Tzb/2HUNHEAtweGn5O48jcv71rwrSKKVg8hjMP2/7Ke4WmSz91CTVN9tdNp+iEyouR3ReEuqK+ug202VzBIelyXNVulgrUWSNttv5UxI/LQl0B5Syhmm3R6SclaUurIG3hqSsyRd9lu3OVhr0ZChw1z/9L2UM4wObn46eOur5Kxv86P/kmyPv5DzN+xJpdw5aOWLtsdKdNYbFbh32s/BAbcFsPynXfb+rYXWWeIvdFRaI9906y2qBJI8jURvZg1V3CFoOiWiCrCEEsAaNgweg4TvrlOFkm/1WQVqfPQCeLi+oSGm08Pr1AH6NFPFjarL+7QBYkD4QLcp+niN1NAxKpNKh0XH9HIAnfD6XGmdPEt0inSOW0eBEjtK7Y0UHBVYdT4n2D8oysFlu74mnU5vyzm+6Oi+Shmck27b05EYcz005s/V+j7wWNnvz7Uvo2OQuaZDlz3yc5T8uPyYXwrQlN6T03Yrkjy1Epf3dbYCRcpT2+5Gp+fWcdkUjemF3l+aczqIplx2gwnFduSy291vs/3+bfOozW6Bqee7sb0qyGldnm23PW1FuXZdwbF197uf7lqsqiUYfWxF6Td9sKiyzH5s+6kwV4u7suiM6Lz9aXvoP5yfx9/J+c5mP0MpL9IZOLi5lk7b4Y9WJD1nFcqtuA5AkmcAd6O/8m+gAot0DvUdfeg87k1VAZYbCVjCzSrJ/9SolzsH8J4k6OUpyWMd0PsX6BFa4IvraVPmhwp9kXTO8+Z60vJzkoE1kkxHNwHa67WMw/y+FgXzaHdjun7XMjgatawhKDU0zcKoQqmMnqN2e3Ro8DvodKAsOicvKHfdAJZteKECR/+XbHs8elnuX/J4p4NEe+m9n5PUfr3/idVCY51t9q7kfSJ+vV97iAIso8ThtkuX7fFhc9s3+xG8sNDRnNPXLp2eHf6scvSllrtb4PBnlbZIqasu28HIbg7UUldJfVZLZTlsr8FVjLWySJ8AJS9bt/fZ0Y8yS5DzIh2zlBdJn3DWUtfgyFnSOHcF2br9mB/WyqLbHDf0CSRI+Qv68AhtMI+c9W+Itof+AwEA";
+
+const ANIMATION_BATCHES = [
+  ["melee_walk", ["up", "left", "down", "right"], 4],
+  ["melee_attack", ["up", "left", "down", "right"], 3],
+  ["melee_walk", ["idle"], 1, 9],
+  ["range_walk", ["up", "left", "down", "right"], 4],
+  ["range_attack", ["up", "left", "down", "right"], 3],
+  ["range_walk", ["idle"], 1, 9],
+  ["goblin_walk", ["up", "left", "down", "right"], 4],
+  ["goblin_attack", ["up", "left", "down", "right"], 3],
+  ["goblin_walk", ["idle"], 1, 9],
+];
 // path points
 const CASTLE_CORNERS = [
   { x: 0.45, y: 0.45 },
@@ -662,13 +672,37 @@ class MainScene extends Phaser.Scene {
       frameWidth: 44,
       frameHeight: 44,
     });
-    this.load.image("heal_icon", HEALING_ICON, {
-      frameWidth: 32,
-      frameHeight: 32,
+    this.load.image("gold_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
     });
-    this.load.image("hit_icon", HIT_ICON, {
-      frameWidth: 32,
-      frameHeight: 32,
+    this.load.image("spell1_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("spell2_icon", SPELL_2_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("spell3_icon", SPELL_3_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("heart_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("mana_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("plus_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+    this.load.image("up_icon", SPELL_1_ICON, {
+      frameWidth: 16,
+      frameHeight: 16,
     });
     this.load.spritesheet("melee_walk", MELEE_WALK, {
       frameWidth: 22,
@@ -815,7 +849,11 @@ class MainScene extends Phaser.Scene {
     if (actionMatch) {
       const btnIndex = BUTTON_TO_INDEX[actionMatch[2]];
       const player =
-        actionMatch[1] === "P1" ? player1 : actionMatch[1] === "P2" ? player2 : null;
+        actionMatch[1] === "P1"
+          ? player1
+          : actionMatch[1] === "P2"
+          ? player2
+          : null;
       player?.onPress(btnIndex);
       return;
     }
@@ -1642,8 +1680,7 @@ class Player {
       x + x_offset,
       y + y_offset,
       cellSide * 10,
-      cellSide * 10,
-      "heal_icon"
+      cellSide * 10
     );
     // icon 6
     x_offset += cellSide * 12;
@@ -1928,7 +1965,8 @@ function randomCreepInRange(hero, maxRadius) {
       creep &&
       creep.health > 0 &&
       Phaser.Math.Distance.Between(hero.x, hero.y, creep.x, creep.y) /
-        config.width <= maxRadius
+        config.width <=
+        maxRadius
   );
   if (!candidates.length) return null;
   return candidates[Math.floor(Math.random() * candidates.length)];
@@ -1940,7 +1978,10 @@ function castMassHeal(hero, amount) {
   playHealSound(hero.scene);
   player.entities.forEach((entity) => {
     if (!entity || entity.health <= 0) return;
-    entity.health = Math.min(entity.maxhealth || entity.health, entity.health + amount);
+    entity.health = Math.min(
+      entity.maxhealth || entity.health,
+      entity.health + amount
+    );
     flashTint(entity, 0x55ff55, 200);
   });
 }
@@ -2096,9 +2137,7 @@ function bindKeys(scene, handler) {
 
 function refreshGoldText() {
   const rate = player1?.base?.goldPerSec || player2?.base?.goldPerSec || 0;
-  scene?.goldText?.setText(
-    `Gold: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`
-  );
+  scene?.goldText?.setText(`Gold: ${gold.toFixed(0)} (+${rate.toFixed(1)}/s)`);
 }
 
 function spendGold(amount) {
