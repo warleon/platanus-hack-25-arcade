@@ -1094,10 +1094,10 @@ class Entity extends Phaser.GameObjects.Sprite {
   damage = 1;
   health = 50;
   maxhealth = 50;
-  healthRegeneration = 0;
+  healthRegenPerSec = 0;
   mana = 100;
   maxmana = 100;
-  manaRegeneration = 0;
+  manaRegenPerSec = 0;
   speed = 40;
   level = 1;
   attackable = true;
@@ -1243,8 +1243,8 @@ class Entity extends Phaser.GameObjects.Sprite {
         this.body.setVelocity(0, 0);
       }
       const delay =
-        this.healthRegeneration > 0
-          ? ((this.maxhealth * 0.5) / this.healthRegeneration) * 1000
+        this.healthRegenPerSec > 0
+          ? ((this.maxhealth * 0.5) / this.healthRegenPerSec) * 1000
           : 5000;
       this.scene.time.delayedCall(delay, () => {
         if (!this.scene || this.health > 0) return;
@@ -1268,6 +1268,19 @@ class Entity extends Phaser.GameObjects.Sprite {
 
   update(_time, delta) {
     if (!this.active) return;
+    const dt = delta / 1000;
+    if (this.healthRegenPerSec > 0 && this.health < this.maxhealth) {
+      this.health = Math.min(
+        this.maxhealth,
+        this.health + this.healthRegenPerSec * dt
+      );
+    }
+    if (this.manaRegenPerSec > 0 && this.mana < this.maxmana) {
+      this.mana = Math.min(
+        this.maxmana,
+        this.mana + this.manaRegenPerSec * dt
+      );
+    }
     if (this.kind === KIND.PATH) return;
     if (this.kind === KIND.BASE) {
       //generate points
@@ -1734,7 +1747,7 @@ function createHeroUnit(scene, position, type) {
   hero.attackable = true;
   hero.home = { x: hero.x, y: hero.y };
   hero.damageTone = type === "range" ? 640 : 520;
-  hero.healthRegeneration = type === "range" ? 6 : 9;
+  hero.healthRegenPerSec = type === "range" ? 6 : 9;
   return hero;
 }
 
