@@ -1325,6 +1325,10 @@ class Player {
     if (entity.kind === KIND.HERO && !this.heroes.includes(entity)) {
       this.heroes.push(entity);
     }
+    entity.player = this;
+    if (entity.kind === KIND.HERO) {
+      entity.onDeath = (killed) => this.onEntityDeath(killed);
+    }
   }
 
   // 1-2-3
