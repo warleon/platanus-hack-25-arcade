@@ -1191,6 +1191,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   takeDamage(amount, from) {
+    if (this.health <= 0 || !this.scene?.sound?.context) return;
     handleDamageFeedback(this);
     this.health -= amount;
     if (this.health <= 0) {
@@ -1384,7 +1385,11 @@ class Player {
     let y_offset = cellSide * 2;
     //BG
     //drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
-    const isBase = this.selection.kind === KIND.BASE;
+    const selection = this.selection;
+    if (!selection || selection.health <= 0) {
+      return;
+    }
+    const isBase = selection.kind === KIND.BASE;
     // portrait
     drawRect(
       0x00ff00,
@@ -1392,8 +1397,8 @@ class Player {
       y + y_offset,
       cellSide * 34,
       cellSide * 34,
-      isBase ? "castle" : this.selection.anims.currentFrame?.textureKey,
-      isBase ? undefined : this.selection.anims.currentFrame?.textureFrame
+      isBase ? "castle" : selection.anims.currentFrame?.textureKey,
+      isBase ? undefined : selection.anims.currentFrame?.textureFrame
     );
     // icon 1
     x_offset += cellSide * 38;
@@ -1459,7 +1464,7 @@ class Player {
       0x00ff00,
       x + x_offset,
       y + y_offset,
-      cellSide * 34 * (this.selection.health / this.selection.maxhealth),
+      cellSide * 34 * (selection.health / selection.maxhealth),
       cellSide * 4
     );
     y_offset += cellSide * 6;
@@ -1468,7 +1473,7 @@ class Player {
       0x0000ff,
       x + x_offset,
       y + y_offset,
-      cellSide * 34 * (this.selection.mana / this.selection.maxmana),
+      cellSide * 34 * (selection.mana / selection.maxmana),
       cellSide * 4
     );
   }
