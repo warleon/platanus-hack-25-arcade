@@ -1693,8 +1693,9 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
     const creep = new Entity(scene, spawn.x, spawn.y, CREEP, "goblin_walk");
     creep.walkAnimationPrefix = "goblin_walk";
     creep.attackAnimationPrefix = "goblin_attack";
-    creep.damage = 10 + round * 2;
-    creep.health = creep.maxhealth = 80 + round * 5;
+    const roundMultiplier = Math.pow(1.2, Math.max(0, round - 1));
+    creep.damage = 12 * roundMultiplier;
+    creep.health = creep.maxhealth = 90 * roundMultiplier;
     creep.attackRadius = 0.08;
     creep.visionRadius = 0.4;
     creep.hitboxRadius = 0.02;
