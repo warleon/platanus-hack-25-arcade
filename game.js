@@ -1,22 +1,3 @@
-const config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  backgroundColor: "#000000",
-  pixelArt: true,
-  scene: {
-    preload: preload,
-    create: create,
-    update: update,
-  },
-  physics: {
-    default: "arcade",
-    arcade: { debug: true },
-  },
-};
-
-const game = new Phaser.Game(config);
-
 const ARCADE_CONTROLS = {
   // ===== PLAYER 1 CONTROLS =====
   // Joystick - Left hand on WASD
@@ -161,139 +142,162 @@ let drawnImages = [];
 let enemiesCount = 0;
 let roundStarting = false;
 
-// Game functions
-function preload() {
-  this.load.image("castle", CASTLE, {
-    frameWidth: 44,
-    frameHeight: 44,
-  });
-  this.load.image("heal_icon", HEALING_ICON, {
-    frameWidth: 32,
-    frameHeight: 32,
-  });
-  this.load.image("hit_icon", HIT_ICON, {
-    frameWidth: 32,
-    frameHeight: 32,
-  });
-  this.load.spritesheet("melee_walk", MELEE_WALK, {
-    frameWidth: 22,
-    frameHeight: 26,
-  });
-  this.load.spritesheet("melee_attack", MELEE_ATTACK, {
-    frameWidth: 46,
-    frameHeight: 34,
-  });
-  this.load.spritesheet("range_walk", RANGE_WALK, {
-    frameWidth: 14,
-    frameHeight: 25,
-  });
-  this.load.spritesheet("range_attack", RANGE_ATTACK, {
-    frameWidth: 26,
-    frameHeight: 31,
-  });
-  this.load.spritesheet("goblin_walk", GOBLIN_WALK, {
-    frameWidth: 15,
-    frameHeight: 24,
-  });
-  this.load.spritesheet("goblin_attack", GOBLIN_ATTACK, {
-    frameWidth: 31,
-    frameHeight: 30,
-  });
+class MainScene extends Phaser.Scene {
+  constructor() {
+    super("MainScene");
+  }
+
+  preload() {
+    this.load.image("castle", CASTLE, {
+      frameWidth: 44,
+      frameHeight: 44,
+    });
+    this.load.image("heal_icon", HEALING_ICON, {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
+    this.load.image("hit_icon", HIT_ICON, {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
+    this.load.spritesheet("melee_walk", MELEE_WALK, {
+      frameWidth: 22,
+      frameHeight: 26,
+    });
+    this.load.spritesheet("melee_attack", MELEE_ATTACK, {
+      frameWidth: 46,
+      frameHeight: 34,
+    });
+    this.load.spritesheet("range_walk", RANGE_WALK, {
+      frameWidth: 14,
+      frameHeight: 25,
+    });
+    this.load.spritesheet("range_attack", RANGE_ATTACK, {
+      frameWidth: 26,
+      frameHeight: 31,
+    });
+    this.load.spritesheet("goblin_walk", GOBLIN_WALK, {
+      frameWidth: 15,
+      frameHeight: 24,
+    });
+    this.load.spritesheet("goblin_attack", GOBLIN_ATTACK, {
+      frameWidth: 31,
+      frameHeight: 30,
+    });
+  }
+
+  create() {
+    scene = this;
+    graphics = this.add.graphics();
+    createBackground();
+    const base = createBase();
+
+    this.input.keyboard.on("keydown", this.handleArcadeInput, this);
+
+    createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
+    createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
+    createAnimations(scene, "melee_walk", ["idle"], 1, 9);
+    createAnimations(scene, "range_walk", ["up", "left", "down", "right"], 4);
+    createAnimations(
+      scene,
+      "range_attack",
+      ["up", "left", "down", "right"],
+      3
+    );
+    createAnimations(scene, "range_walk", ["idle"], 1, 9);
+    createAnimations(scene, "goblin_walk", ["up", "left", "down", "right"], 4);
+    createAnimations(
+      scene,
+      "goblin_attack",
+      ["up", "left", "down", "right"],
+      3
+    );
+    createAnimations(scene, "goblin_walk", ["idle"], 1, 9);
+
+    player1 = new Player(1);
+    player2 = new Player(2);
+    player1.linkBase(base);
+    player1.createPath(scene);
+    player1.createHeroes(scene);
+    player2.linkBase(base);
+    player2.createPath(scene);
+    player2.createHeroes(scene);
+
+    playTone(this, 440, 0.1);
+  }
+
+  update(_time, delta) {
+    player1.entities.forEach((entity) => {
+      entity.update(_time, delta);
+    });
+    player2.entities.forEach((entity) => {
+      entity.update(_time, delta);
+    });
+    drawGame();
+    if (enemiesCount <= 0 && !roundStarting) {
+      roundStarting = true;
+      round++;
+      enemiesCount = 0;
+      setTimeout(() => {
+        player1.createEnemies(scene);
+        player2.createEnemies(scene);
+        roundStarting = false;
+      }, 5000);
+    }
+  }
+
+  handleArcadeInput(event) {
+    const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
+    const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
+
+    if (!match) {
+      return;
+    }
+
+    if (event.preventDefault) {
+      event.preventDefault();
+    }
+
+    const playerKey = match[1];
+    const directionKey = match[2];
+    const directionVectors = {
+      U: DIRECTIONS.up,
+      D: DIRECTIONS.down,
+      L: DIRECTIONS.left,
+      R: DIRECTIONS.right,
+      UL: DIRECTIONS.upLeft,
+      UR: DIRECTIONS.upRight,
+      DL: DIRECTIONS.downLeft,
+      DR: DIRECTIONS.downRight,
+    };
+    const direction = directionVectors[directionKey];
+
+    if (!direction) {
+      return;
+    }
+
+    if (playerKey === "P1") {
+      player1.moveSelectionTo(direction);
+    } else if (playerKey === "P2") {
+      player2.moveSelectionTo(direction);
+    }
+  }
 }
 
-function create() {
-  scene = this;
-  graphics = this.add.graphics();
-  createBackground();
-  const base = createBase();
+const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  backgroundColor: "#000000",
+  pixelArt: true,
+  scene: MainScene,
+  physics: {
+    default: "arcade",
+    arcade: { debug: true },
+  },
+};
 
-  // Keyboard input
-  this.input.keyboard.on("keydown", onInput);
-
-  // knight
-  createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
-  createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
-  createAnimations(scene, "melee_walk", ["idle"], 1, 9);
-  // archer
-  createAnimations(scene, "range_walk", ["up", "left", "down", "right"], 4);
-  createAnimations(scene, "range_attack", ["up", "left", "down", "right"], 3);
-  createAnimations(scene, "range_walk", ["idle"], 1, 9);
-  // goblin
-  createAnimations(scene, "goblin_walk", ["up", "left", "down", "right"], 4);
-  createAnimations(scene, "goblin_attack", ["up", "left", "down", "right"], 3);
-  createAnimations(scene, "goblin_walk", ["idle"], 1, 9);
-  // entities
-  player1 = new Player(1);
-  player2 = new Player(2);
-  // p1
-  player1.linkBase(base);
-  player1.createPath(scene);
-  player1.createHeroes(scene);
-  //p2
-  player2.linkBase(base);
-  player2.createPath(scene);
-  player2.createHeroes(scene);
-
-  playTone(this, 440, 0.1);
-}
-
-function onInput(event) {
-  // Normalize keyboard input to arcade codes for easier testing
-  const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
-  const match = key && key.match(/^(P[12])(UL|UR|DL|DR|U|D|L|R)$/);
-
-  if (!match) {
-    return;
-  }
-
-  if (event.preventDefault) {
-    event.preventDefault();
-  }
-
-  const playerKey = match[1];
-  const directionKey = match[2];
-  const directionVectors = {
-    U: DIRECTIONS.up,
-    D: DIRECTIONS.down,
-    L: DIRECTIONS.left,
-    R: DIRECTIONS.right,
-    UL: DIRECTIONS.upLeft,
-    UR: DIRECTIONS.upRight,
-    DL: DIRECTIONS.downLeft,
-    DR: DIRECTIONS.downRight,
-  };
-  const direction = directionVectors[directionKey];
-
-  if (!direction) {
-    return;
-  }
-
-  if (playerKey === "P1") {
-    player1.moveSelectionTo(direction);
-  } else if (playerKey === "P2") {
-    player2.moveSelectionTo(direction);
-  }
-}
-
-function update(_time, delta) {
-  player1.entities.forEach((entity) => {
-    entity.update(_time, delta);
-  });
-  player2.entities.forEach((entity) => {
-    entity.update(_time, delta);
-  });
-  drawGame();
-  if (enemiesCount <= 0 && !roundStarting) {
-    roundStarting = true;
-    round++;
-    enemiesCount = 0;
-    setTimeout(() => {
-      player1.createEnemies(scene);
-      player2.createEnemies(scene);
-      roundStarting = false;
-    }, 5000);
-  }
-}
+const game = new Phaser.Game(config);
 
 function drawGame() {
   clearDrawn();
