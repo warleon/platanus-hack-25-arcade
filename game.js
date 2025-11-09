@@ -141,10 +141,211 @@ let round = 0;
 let drawnImages = [];
 let enemiesCount = 0;
 let roundStarting = false;
+let controllerMode = { P1: true, P2: true };
+
+class StartScene extends Phaser.Scene {
+  constructor() {
+    super("StartScene");
+    this.startCounts = { P1: 0, P2: 0 };
+    this.startButtons = {};
+    this.gameStarted = false;
+  }
+
+  create() {
+    this.startCounts = { P1: 0, P2: 0 };
+    this.gameStarted = false;
+    this.add
+      .text(config.width / 2, 70, "Arcade Briefing", {
+        fontSize: "36px",
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(
+        config.width / 2,
+        150,
+        "Press both START buttons once to begin in 2P mode.\nDouble tap the same START button to play solo on that side.\nP1 START = S or Space | P2 START = 5 or 0",
+        {
+          fontSize: "20px",
+          color: "#d0d0d0",
+          align: "center",
+          wordWrap: { width: config.width - 80 },
+        }
+      )
+      .setOrigin(0.5);
+
+    this.createControllerDisplays();
+    this.statusText = this.add
+      .text(config.width / 2, config.height - 60, "Waiting for players...", {
+        fontSize: "22px",
+        color: "#ffff00",
+        align: "center",
+      })
+      .setOrigin(0.5);
+
+    this.input.keyboard.on("keydown", this.handleKey, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard.off("keydown", this.handleKey, this);
+    });
+  }
+
+  createControllerDisplays() {
+    this.startButtons = {};
+    this.drawController(200, "PLAYER ONE", false, "P1");
+    this.drawController(600, "PLAYER TWO", true, "P2");
+  }
+
+  drawController(x, label, mirrored, key) {
+    const container = this.add.container(x, 330);
+    const panel = this.add
+      .rectangle(0, 0, 320, 240, 0x060606, 1)
+      .setStrokeStyle(2, 0xffffff);
+    container.add(panel);
+
+    const joystickX = mirrored ? 90 : -90;
+    const buttonStartX = mirrored ? -40 : 40;
+
+    const stickBase = this.add.circle(joystickX, 40, 45, 0x1a1a1a);
+    const stick = this.add.rectangle(joystickX, -5, 12, 100, 0x555555);
+    const knob = this.add.circle(joystickX, -90, 28, 0x3b7bff);
+    [stickBase, stick, knob].forEach((part) => container.add(part));
+
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 3; col++) {
+        const btn = this.add.circle(
+          buttonStartX + col * 45,
+          -30 + row * 45,
+          18,
+          0x0f49bf
+        );
+        btn.setStrokeStyle(2, 0x6fb1ff);
+        container.add(btn);
+      }
+    }
+
+    const startButton = this.add
+      .circle(0, 85, 24, 0x333333)
+      .setStrokeStyle(2, 0xffff00);
+    const startLabel = this.add
+      .text(0, 120, "START", {
+        fontSize: "18px",
+        color: "#ffff00",
+      })
+      .setOrigin(0.5);
+
+    const title = this.add
+      .text(0, -120, label, {
+        fontSize: "22px",
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    container.add(startButton);
+    container.add(startLabel);
+    container.add(title);
+    this.startButtons[key] = startButton;
+  }
+
+  handleKey(event) {
+    const key = KEYBOARD_TO_ARCADE[event.key] || event.key;
+    if (key === "START1" || key === "START2") {
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+    }
+    if (key === "START1") {
+      this.processStart("P1");
+    } else if (key === "START2") {
+      this.processStart("P2");
+    }
+  }
+
+  processStart(controllerKey) {
+    if (this.gameStarted) {
+      return;
+    }
+    this.startCounts[controllerKey]++;
+    this.flashStart(controllerKey);
+    this.updateStatus();
+
+    const otherKey = controllerKey === "P1" ? "P2" : "P1";
+    if (this.startCounts.P1 >= 1 && this.startCounts.P2 >= 1) {
+      controllerMode = { P1: true, P2: true };
+      this.launchMain({ players: 2 });
+      return;
+    }
+
+    if (
+      this.startCounts[controllerKey] >= 2 &&
+      this.startCounts[otherKey] === 0
+    ) {
+      controllerMode = {
+        P1: controllerKey === "P1",
+        P2: controllerKey === "P2",
+      };
+      this.launchMain({ players: 1, solo: controllerKey });
+    }
+  }
+
+  flashStart(key) {
+    const button = this.startButtons[key];
+    if (!button) {
+      return;
+    }
+    button.setFillStyle(0x00aa00);
+    this.time.delayedCall(200, () => button.setFillStyle(0x333333));
+  }
+
+  updateStatus() {
+    const { P1, P2 } = this.startCounts;
+    if (P1 && P2) {
+      this.statusText.setText("Both players ready! Starting co-op...");
+    } else if (P1 && !P2) {
+      this.statusText.setText(
+        "Player 1 ready. Double tap START for solo or wait for Player 2."
+      );
+    } else if (P2 && !P1) {
+      this.statusText.setText(
+        "Player 2 ready. Double tap START for solo or wait for Player 1."
+      );
+    } else {
+      this.statusText.setText("Waiting for players...");
+    }
+  }
+
+  launchMain(data) {
+    if (this.gameStarted) {
+      return;
+    }
+    this.gameStarted = true;
+    const message =
+      data.players === 2
+        ? "Launching 2 player mode!"
+        : `Launching solo mode on ${data.solo === "P1" ? "Player 1" : "Player 2"} controls!`;
+    this.statusText.setText(message);
+    this.time.delayedCall(250, () => {
+      this.scene.start("MainScene", data);
+    });
+  }
+}
 
 class MainScene extends Phaser.Scene {
   constructor() {
     super("MainScene");
+  }
+
+  init(data) {
+    const isSolo = data?.players === 1;
+    controllerMode = isSolo
+      ? {
+          P1: data?.solo === "P1",
+          P2: data?.solo === "P2",
+        }
+      : { P1: true, P2: true };
+    this.modeData = data || { players: 2 };
   }
 
   preload() {
@@ -192,8 +393,6 @@ class MainScene extends Phaser.Scene {
     createBackground();
     const base = createBase();
 
-    this.input.keyboard.on("keydown", this.handleArcadeInput, this);
-
     createAnimations(scene, "melee_walk", ["up", "left", "down", "right"], 4);
     createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
     createAnimations(scene, "melee_walk", ["idle"], 1, 9);
@@ -224,23 +423,47 @@ class MainScene extends Phaser.Scene {
     player2.createHeroes(scene);
 
     playTone(this, 440, 0.1);
+
+    if (!controllerMode.P1 || !controllerMode.P2) {
+      const soloSide = controllerMode.P1 ? "PLAYER ONE" : "PLAYER TWO";
+      this.add
+        .text(config.width / 2, 24, `Solo Mode - ${soloSide} controls`, {
+          fontSize: "20px",
+          color: "#ffff88",
+          align: "center",
+        })
+        .setOrigin(0.5);
+    }
+
+    this.input.keyboard.on("keydown", this.handleArcadeInput, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard.off("keydown", this.handleArcadeInput, this);
+    });
   }
 
   update(_time, delta) {
-    player1.entities.forEach((entity) => {
-      entity.update(_time, delta);
-    });
-    player2.entities.forEach((entity) => {
-      entity.update(_time, delta);
-    });
+    if (player1) {
+      player1.entities.forEach((entity) => {
+        entity.update(_time, delta);
+      });
+    }
+    if (player2) {
+      player2.entities.forEach((entity) => {
+        entity.update(_time, delta);
+      });
+    }
     drawGame();
     if (enemiesCount <= 0 && !roundStarting) {
       roundStarting = true;
       round++;
       enemiesCount = 0;
       setTimeout(() => {
-        player1.createEnemies(scene);
-        player2.createEnemies(scene);
+        if (player1) {
+          player1.createEnemies(scene);
+        }
+        if (player2) {
+          player2.createEnemies(scene);
+        }
         roundStarting = false;
       }, 5000);
     }
@@ -260,6 +483,12 @@ class MainScene extends Phaser.Scene {
 
     const playerKey = match[1];
     const directionKey = match[2];
+    if (
+      (playerKey === "P1" && !controllerMode.P1) ||
+      (playerKey === "P2" && !controllerMode.P2)
+    ) {
+      return;
+    }
     const directionVectors = {
       U: DIRECTIONS.up,
       D: DIRECTIONS.down,
@@ -277,9 +506,9 @@ class MainScene extends Phaser.Scene {
     }
 
     if (playerKey === "P1") {
-      player1.moveSelectionTo(direction);
+      player1?.moveSelectionTo(direction);
     } else if (playerKey === "P2") {
-      player2.moveSelectionTo(direction);
+      player2?.moveSelectionTo(direction);
     }
   }
 }
@@ -290,7 +519,7 @@ const config = {
   height: 600,
   backgroundColor: "#000000",
   pixelArt: true,
-  scene: MainScene,
+  scene: [StartScene, MainScene],
   physics: {
     default: "arcade",
     arcade: { debug: true },
@@ -301,8 +530,12 @@ const game = new Phaser.Game(config);
 
 function drawGame() {
   clearDrawn();
-  player1.placeUI();
-  player2.placeUI();
+  if (player1 && controllerMode.P1) {
+    player1.placeUI();
+  }
+  if (player2 && controllerMode.P2) {
+    player2.placeUI();
+  }
 }
 
 function restartGame(scene) {
