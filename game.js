@@ -158,6 +158,7 @@ let ctrlMode = { P1: true, P2: true };
 let defenderUnits = [];
 let castleWaypoints = [];
 let neutrals = [];
+let gold = 0;
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -708,20 +709,11 @@ class MainScene extends Phaser.Scene {
 
     playTone(this, 440, 0.1);
 
-    if (!ctrlMode.P1 || !ctrlMode.P2) {
-      const soloSide = ctrlMode.P1 ? "PLAYER ONE" : "PLAYER TWO";
-      centeredText(
-        this,
-        config.width / 2,
-        24,
-        `Solo Mode - ${soloSide} controls`,
-        {
-          fontSize: "20px",
-          color: "#ffff88",
-          align: "center",
-        }
-      );
-    }
+    this.goldText = centeredText(this, config.width / 2, 24, "", {
+      fontSize: "20px",
+      color: "#ffff88",
+      align: "center",
+    });
 
     bindKeys(this, this.handleArcadeInput);
     this.events.once(SHUTDOWN, () => {
@@ -729,6 +721,7 @@ class MainScene extends Phaser.Scene {
       this.pauseMenu = null;
       graphics?.destroy();
       graphics = null;
+      this.goldText = null;
       neutrals = [];
       drawnImages = [];
       player1 = null;
@@ -1326,7 +1319,14 @@ class Entity extends Phaser.GameObjects.Sprite {
     }
     if (this.kind === KIND.PATH) return;
     if (this.kind === KIND.BASE) {
-      //generate points
+      if (this.goldPerSec) {
+        gold += (this.goldPerSec * dt);
+        if (scene?.goldText) {
+          scene.goldText.setText(
+            `Gold: ${gold.toFixed(0)} (+${this.goldPerSec.toFixed(1)}/s)`
+          );
+        }
+      }
       return;
     }
     if (this.currentTarget?.health <= 0) this.popTarget();
@@ -1943,5 +1943,6 @@ function createBase() {
   base.hitboxRadius = 0.08;
   base.attackable = true;
   base.damageTone = 200;
+  base.goldPerSec = 5;
   return base;
 }
