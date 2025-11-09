@@ -797,6 +797,7 @@ class MainScene extends Phaser.Scene {
     if (enemiesCount <= 0 && !roundStarting) {
       roundStarting = true;
       round++;
+      refreshGoldText();
       enemiesCount = 0;
       this.time.delayedCall(4000, () => {
         if (!this.gameEnded) {
@@ -2150,7 +2151,7 @@ function getHeroButtonConfigs(hero, player) {
       cost: getHeroActionCost(hero, 2),
     },
     {
-      icons: [iconConfig("spell1_icon", -6), iconConfig("plus_icon", 6)],
+      icons: [iconConfig("spell1_icon", -6), iconConfig("reroll_icon", 6)],
       cost: getHeroActionCost(hero, 3),
     },
     {
@@ -2162,7 +2163,7 @@ function getHeroButtonConfigs(hero, player) {
       cost: getHeroActionCost(hero, 5),
     },
     {
-      icons: [iconConfig("spell2_icon", -6), iconConfig("plus_icon", 6)],
+      icons: [iconConfig("spell2_icon", -6), iconConfig("reroll_icon", 6)],
       cost: getHeroActionCost(hero, 6),
     },
   ];
