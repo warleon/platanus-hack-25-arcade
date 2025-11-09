@@ -1744,7 +1744,6 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
     if (waypoint) {
       creep.appendTarget(waypoint);
     }
-    creep.appendTarget(base);
     creep.onDeath = () => {
       defenders.forEach((hero) => {
         if (!hero || !hero.targettable) {
