@@ -129,18 +129,10 @@ const HORDE_LANES = [
   { spawn: { x: -0.05, y: 0.3 }, cornerIndex: 0 },
 ];
 
-// anim states: idle, walk, attack, die
-const IDLE = "idle";
-const WALK = "walk";
-const ATTACK = "attack";
-const DIE = "die";
-// entity kinds
-const PATH = "path";
-const HERO = "hero";
-const CREEP = "creep";
-const BASE = "base";
-const UI = "ui";
+const STATES = { IDLE: 0, WALK: 1, ATTACK: 2, DIE: 3 };
+const KIND = { PATH: 0, HERO: 1, CREEP: 2, BASE: 3, UI: 4 };
 const BACKGROUND_TEXTURE_KEY = "arena-bg";
+const SHUTDOWN = Phaser.Scenes.Events.SHUTDOWN;
 // Game variables
 let scene;
 let graphics;
@@ -150,10 +142,10 @@ let round = 0;
 let drawnImages = [];
 let enemiesCount = 0;
 let roundStarting = false;
-let controllerMode = { P1: true, P2: true };
+let ctrlMode = { P1: true, P2: true };
 let defenderUnits = [];
 let castleWaypoints = [];
-let neutralEntities = [];
+let neutrals = [];
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
@@ -207,7 +199,7 @@ class StartScene extends Phaser.Scene {
     roundStarting = false;
     player1 = null;
     player2 = null;
-    controllerMode = { P1: true, P2: true };
+    ctrlMode = { P1: true, P2: true };
     this.startCounts = { P1: 0, P2: 0 };
     this.gameStarted = false;
     placeBackground(this);
@@ -254,10 +246,7 @@ class StartScene extends Phaser.Scene {
       }
     );
 
-    this.input.keyboard.on("keydown", this.handleKey, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard.off("keydown", this.handleKey, this);
-    });
+    bindKeys(this, this.handleKey);
   }
 
   getBestLabel() {
@@ -360,7 +349,7 @@ class StartScene extends Phaser.Scene {
 
     const otherKey = controllerKey === "P1" ? "P2" : "P1";
     if (this.startCounts.P1 >= 1 && this.startCounts.P2 >= 1) {
-      controllerMode = { P1: true, P2: true };
+      ctrlMode = { P1: true, P2: true };
       this.launchMain({ players: 2 });
       return;
     }
@@ -369,7 +358,7 @@ class StartScene extends Phaser.Scene {
       this.startCounts[controllerKey] >= 2 &&
       this.startCounts[otherKey] === 0
     ) {
-      controllerMode = {
+      ctrlMode = {
         P1: controllerKey === "P1",
         P2: controllerKey === "P2",
       };
@@ -483,10 +472,7 @@ class EndScene extends Phaser.Scene {
       }
     );
 
-    this.input.keyboard.on("keydown", this.handleKey, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard.off("keydown", this.handleKey, this);
-    });
+    bindKeys(this, this.handleKey);
   }
 
   createNameEntry(x, label, enabled) {
@@ -606,7 +592,7 @@ class EndScene extends Phaser.Scene {
     };
     recordRun(payload);
     this.statusText.setText("Score saved! Returning to main menu...");
-    controllerMode = { P1: true, P2: true };
+    ctrlMode = { P1: true, P2: true };
     this.time.delayedCall(400, () => {
       this.scene.start("StartScene");
     });
@@ -629,7 +615,7 @@ class MainScene extends Phaser.Scene {
 
   init(data) {
     const isSolo = data?.players === 1;
-    controllerMode = isSolo
+    ctrlMode = isSolo
       ? {
           P1: data?.solo === "P1",
           P2: data?.solo === "P2",
@@ -681,7 +667,7 @@ class MainScene extends Phaser.Scene {
     scene = this;
     placeBackground(this);
     graphics = this.add.graphics();
-    neutralEntities = [];
+    neutrals = [];
     const base = createBase();
     this.baseEntity = base;
     this.castleWaypoints = createCastleWaypoints(scene);
@@ -710,8 +696,8 @@ class MainScene extends Phaser.Scene {
 
     playTone(this, 440, 0.1);
 
-    if (!controllerMode.P1 || !controllerMode.P2) {
-      const soloSide = controllerMode.P1 ? "PLAYER ONE" : "PLAYER TWO";
+    if (!ctrlMode.P1 || !ctrlMode.P2) {
+      const soloSide = ctrlMode.P1 ? "PLAYER ONE" : "PLAYER TWO";
       centeredText(
         this,
         config.width / 2,
@@ -725,14 +711,13 @@ class MainScene extends Phaser.Scene {
       );
     }
 
-    this.input.keyboard.on("keydown", this.handleArcadeInput, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard.off("keydown", this.handleArcadeInput, this);
+    bindKeys(this, this.handleArcadeInput);
+    this.events.once(SHUTDOWN, () => {
       this.pauseMenu?.destroy();
       this.pauseMenu = null;
       graphics?.destroy();
       graphics = null;
-      neutralEntities = [];
+      neutrals = [];
       drawnImages = [];
       player1 = null;
       player2 = null;
@@ -757,7 +742,7 @@ class MainScene extends Phaser.Scene {
         entity.update(_time, delta);
       });
     }
-    neutralEntities = neutralEntities.filter((entity) => {
+    neutrals = neutrals.filter((entity) => {
       if (!entity || !entity.active) {
         return false;
       }
@@ -818,8 +803,8 @@ class MainScene extends Phaser.Scene {
     const playerKey = match[1];
     const directionKey = match[2];
     if (
-      (playerKey === "P1" && !controllerMode.P1) ||
-      (playerKey === "P2" && !controllerMode.P2)
+      (playerKey === "P1" && !ctrlMode.P1) ||
+      (playerKey === "P2" && !ctrlMode.P2)
     ) {
       return;
     }
@@ -993,7 +978,7 @@ class MainScene extends Phaser.Scene {
       banner?.destroy();
       this.scene.start("EndScene", {
         round,
-        controllers: { ...controllerMode },
+        controllers: { ...ctrlMode },
       });
     });
   }
@@ -1020,10 +1005,10 @@ const game = new Phaser.Game(config);
 
 function drawGame() {
   clearDrawn();
-  if (player1 && controllerMode.P1) {
+  if (player1 && ctrlMode.P1) {
     player1.placeUI();
   }
-  if (player2 && controllerMode.P2) {
+  if (player2 && ctrlMode.P2) {
     player2.placeUI();
   }
 }
@@ -1103,7 +1088,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   appendTarget(entity) {
-    if (entity.kind !== PATH) {
+    if (entity.kind !== KIND.PATH) {
       if (entity.attackable === false) {
         return;
       }
@@ -1118,7 +1103,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
   popTarget() {
     if (this.currentTarget) {
-      if (this.currentTarget.kind !== PATH) {
+      if (this.currentTarget.kind !== KIND.PATH) {
         this.attackTargets.shift();
         this.currentTarget = this.attackTargets[0];
       } else {
@@ -1184,24 +1169,24 @@ class Entity extends Phaser.GameObjects.Sprite {
     if (!this.active) return;
     this.body.setVelocity(0, 0);
     this.attackable = false;
-    if (this.kind === CREEP) enemiesCount--;
+    if (this.kind === KIND.CREEP) enemiesCount--;
     this.onDeath(this, by);
     this.destroy();
   }
 
   update(_time, delta) {
-    if (this.kind === PATH) return;
-    if (this.kind === BASE) {
+    if (this.kind === KIND.PATH) return;
+    if (this.kind === KIND.BASE) {
       //generate points
       return;
     }
     if (this.currentTarget?.health <= 0) this.popTarget();
-    if (!this.currentTarget || this.currentTarget.kind === PATH)
+    if (!this.currentTarget || this.currentTarget.kind === KIND.PATH)
       this.lookForTargets();
     if (this.currentTarget) {
       const distance = this.distanceTo(this.currentTarget);
       if (distance < this.attackRadius + this.currentTarget.hitboxRadius) {
-        if (this.currentTarget.kind === PATH) {
+        if (this.currentTarget.kind === KIND.PATH) {
           this.popTarget();
         } else {
           if (!this.attacking && this.currentTarget.attackable) this.attack();
@@ -1209,7 +1194,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       } else {
         this.walkTo(this.currentTarget);
       }
-    } else if (this.kind === HERO && this.home) {
+    } else if (this.kind === KIND.HERO && this.home) {
       const dx = this.home.x - this.x;
       const dy = this.home.y - this.y;
       const distanceSq = dx * dx + dy * dy;
@@ -1231,13 +1216,13 @@ class Entity extends Phaser.GameObjects.Sprite {
       const distance = this.distanceTo(entity);
       if (distance > this.visionRadius) continue;
       switch (this.kind) {
-        case CREEP:
-          if (entity.kind === HERO || entity.kind === BASE) {
+        case KIND.CREEP:
+          if (entity.kind === KIND.HERO || entity.kind === KIND.BASE) {
             this.appendTarget(entity);
           }
           break;
-        case HERO:
-          if (entity.kind === CREEP) {
+        case KIND.HERO:
+          if (entity.kind === KIND.CREEP) {
             this.appendTarget(entity);
           }
       }
@@ -1303,7 +1288,7 @@ class Player {
     if (!this.entities.includes(entity)) {
       this.entities.push(entity);
     }
-    if (entity.kind === HERO && !this.heroes.includes(entity)) {
+    if (entity.kind === KIND.HERO && !this.heroes.includes(entity)) {
       this.heroes.push(entity);
     }
   }
@@ -1366,7 +1351,7 @@ class Player {
     let y_offset = cellSide * 2;
     //BG
     //drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
-    const isBase = this.selection.kind === BASE;
+    const isBase = this.selection.kind === KIND.BASE;
     // portrait
     drawRect(
       0x00ff00,
@@ -1472,8 +1457,8 @@ function findClosestInDirection(current, dir, entities) {
     if (
       !entity ||
       entity === current ||
-      entity.kind === UI ||
-      entity.kind === PATH ||
+      entity.kind === KIND.UI ||
+      entity.kind === KIND.PATH ||
       entity.health <= 0
     )
       continue;
@@ -1599,6 +1584,13 @@ function centeredText(scene, x, y, text, style) {
   return scene.add.text(x, y, text, style).setOrigin(0.5);
 }
 
+function bindKeys(scene, handler) {
+  scene.input.keyboard.on("keydown", handler, scene);
+  scene.events.once(SHUTDOWN, () =>
+    scene.input.keyboard.off("keydown", handler, scene)
+  );
+}
+
 function clampToArena(vec) {
   return new Phaser.Math.Vector2(
     Phaser.Math.Clamp(vec.x, 0.08, 0.92),
@@ -1608,7 +1600,7 @@ function clampToArena(vec) {
 
 function createHeroUnit(scene, position, type) {
   const texture = type === "range" ? "range_walk" : "melee_walk";
-  const hero = new Entity(scene, position.x, position.y, HERO, texture);
+  const hero = new Entity(scene, position.x, position.y, KIND.HERO, texture);
   hero.walkAnimationPrefix = texture;
   hero.attackAnimationPrefix =
     type === "range" ? "range_attack" : "melee_attack";
@@ -1646,7 +1638,7 @@ function createDefenderFormation(scene) {
 
 function createCastleWaypoints(scene) {
   castleWaypoints = CASTLE_CORNERS.map((corner) => {
-    const marker = new Entity(scene, corner.x, corner.y, PATH, "");
+    const marker = new Entity(scene, corner.x, corner.y, KIND.PATH, "");
     marker.disappear();
     return marker;
   });
@@ -1654,8 +1646,8 @@ function createCastleWaypoints(scene) {
 }
 
 function assignDefendersToPlayers(defenders) {
-  const activeP1 = controllerMode.P1;
-  const activeP2 = controllerMode.P2;
+  const activeP1 = ctrlMode.P1;
+  const activeP2 = ctrlMode.P2;
   defenders.forEach((hero) => {
     if (!hero) {
       return;
@@ -1690,7 +1682,7 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
   }
   HORDE_LANES.forEach((lane) => {
     const spawn = lane.spawn;
-    const creep = new Entity(scene, spawn.x, spawn.y, CREEP, "goblin_walk");
+    const creep = new Entity(scene, spawn.x, spawn.y, KIND.CREEP, "goblin_walk");
     creep.walkAnimationPrefix = "goblin_walk";
     creep.attackAnimationPrefix = "goblin_attack";
     const roundMultiplier = Math.pow(1.2, Math.max(0, round - 1));
@@ -1723,9 +1715,9 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
           hero.targettable.splice(idx, 1);
         }
       });
-      neutralEntities = neutralEntities.filter((entity) => entity !== creep);
+      neutrals = neutrals.filter((entity) => entity !== creep);
     };
-    neutralEntities.push(creep);
+    neutrals.push(creep);
     enemiesCount++;
   });
 }
@@ -1743,7 +1735,7 @@ function resetDefenders(defenders) {
 }
 
 function createBase() {
-  const base = new Entity(scene, 0.5, 0.5, BASE, "castle");
+  const base = new Entity(scene, 0.5, 0.5, KIND.BASE, "castle");
   base.setScale(3);
   base.maxhealth = 800;
   base.health = base.maxhealth;
