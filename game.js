@@ -145,14 +145,14 @@ const CASTLE_CORNERS = [
 ];
 
 const HORDE_LANES = [
-  { spawn: { x: 0.3, y: -0.05 }, cornerIndex: 0 },
-  { spawn: { x: 0.7, y: -0.05 }, cornerIndex: 1 },
-  { spawn: { x: 1.05, y: 0.3 }, cornerIndex: 1 },
-  { spawn: { x: 1.05, y: 0.7 }, cornerIndex: 2 },
-  { spawn: { x: 0.7, y: 1.05 }, cornerIndex: 2 },
-  { spawn: { x: 0.3, y: 1.05 }, cornerIndex: 3 },
-  { spawn: { x: -0.05, y: 0.7 }, cornerIndex: 3 },
-  { spawn: { x: -0.05, y: 0.3 }, cornerIndex: 0 },
+  { spawn: { x: 0.45, y: -0.05 }, cornerIndex: 0 },
+  { spawn: { x: 0.55, y: -0.05 }, cornerIndex: 1 },
+  { spawn: { x: 1.05, y: 0.45 }, cornerIndex: 1 },
+  { spawn: { x: 1.05, y: 0.55 }, cornerIndex: 2 },
+  { spawn: { x: 0.55, y: 1.05 }, cornerIndex: 2 },
+  { spawn: { x: 0.45, y: 1.05 }, cornerIndex: 3 },
+  { spawn: { x: -0.05, y: 0.55 }, cornerIndex: 3 },
+  { spawn: { x: -0.05, y: 0.45 }, cornerIndex: 0 },
 ];
 
 const STATES = { IDLE: 0, WALK: 1, ATTACK: 2, DIE: 3 };
@@ -182,17 +182,17 @@ const SPELL_DEFS = [
 ];
 const SPELL_ICONS = ["spell1_icon", "spell2_icon", "spell3_icon"];
 const HERO_UPGRADE_COST = {
-  health: 90,
-  mana: 90,
-  spell: 120,
-  healthRegen: 70,
-  manaRegen: 70,
+  health: 50,
+  mana: 50,
+  spell: 50,
+  healthRegen: 50,
+  manaRegen: 50,
 };
 const BASE_COST = {
-  spell: [200, 220, 260],
+  spell: [100, 120, 140],
   goldRate: 150,
-  maxHealth: 180,
-  regen: 140,
+  maxHealth: 50,
+  regen: 50,
 };
 
 const BEST_RUN_KEY = "arcade_best_run";
@@ -1055,7 +1055,7 @@ const config = {
   scene: [StartScene, MainScene, EndScene],
   physics: {
     default: "arcade",
-    arcade: { debug: true },
+    arcade: { debug: false },
   },
 };
 
