@@ -180,6 +180,7 @@ const SPELL_DEFS = [
   { id: 1, type: SPELL_TYPES.AOE_RANDOM },
   { id: 2, type: SPELL_TYPES.MASS_HEAL },
 ];
+const SPELL_ICONS = ["spell1_icon", "spell2_icon", "spell3_icon"];
 const HERO_UPGRADE_COST = {
   health: 90,
   mana: 90,
@@ -1831,46 +1832,53 @@ function createSpellInstance(id) {
   }
 }
 
+function getSpellStats(hero, spell) {
+  if (!hero || !spell) {
+    return { potency: 0, manaCost: 0 };
+  }
+  const base = hero.player?.base;
+  const spellLevel = base?.spellLevels?.[spell.id] || 1;
+  const multiplier = Math.pow(1.2, Math.max(0, spellLevel - 1));
+  const potency = spell.baseValue * multiplier;
+  return { potency, manaCost: potency };
+}
+
 function attemptHeroCast(hero) {
   if (
     !hero.spells ||
     hero.health <= 0 ||
     !hero.currentTarget ||
+    hero.currentTarget.kind !== KIND.CREEP ||
     hero.mana < hero.maxmana
   )
     return;
   const readySlots = [];
   hero.spells.forEach((spell, idx) => {
     if (!spell) return;
-    if (hero.mana >= spell.baseValue) {
-      readySlots.push(idx);
+    const stats = getSpellStats(hero, spell);
+    if (stats.manaCost > 0 && hero.mana >= stats.manaCost) {
+      readySlots.push({ slot: idx, spell, manaCost: stats.manaCost });
     }
   });
   if (!readySlots.length) return;
-  const slot =
+  const choice =
     readySlots[Math.floor(Math.random() * readySlots.length)] ?? readySlots[0];
-  const spell = hero.spells[slot];
-  if (!spell) return;
-  if (executeHeroSpell(hero, spell)) {
-    hero.mana = Math.max(0, hero.mana - spell.baseValue);
+  if (executeHeroSpell(hero, choice.spell)) {
+    hero.mana = Math.max(0, hero.mana - choice.manaCost);
   }
 }
 
 function executeHeroSpell(hero, spell) {
-  const player = hero.player;
-  const base = player?.base;
-  const spellLevel = base?.spellLevels?.[spell.id] || 1;
-  const multiplier = Math.pow(1.2, Math.max(0, spellLevel - 1));
-  const potency = spell.baseValue * multiplier;
+  const { potency } = getSpellStats(hero, spell);
+  if (!potency) return false;
   switch (spell.type) {
     case SPELL_TYPES.AOE_SELF:
       castAreaDamage(hero.x, hero.y, spell.radius, potency, hero);
       return true;
     case SPELL_TYPES.AOE_RANDOM: {
       const target = randomCreepInRange(hero, hero.visionRadius);
-      const centerX = target?.x ?? hero.x;
-      const centerY = target?.y ?? hero.y;
-      castAreaDamage(centerX, centerY, spell.radius, potency, hero);
+      if (!target) return false;
+      castAreaDamage(target.x, target.y, spell.radius, potency, hero);
       return true;
     }
     case SPELL_TYPES.MASS_HEAL:
@@ -2073,6 +2081,14 @@ function iconConfig(texture, offsetX = 0, offsetY = 0, size) {
   return { texture, offsetX, offsetY, size };
 }
 
+function spellIconForSlot(hero, slot) {
+  const spell = hero?.spells?.[slot];
+  if (!spell || spell.id === undefined) {
+    return SPELL_ICONS[slot] || SPELL_ICONS[0];
+  }
+  return SPELL_ICONS[spell.id] || SPELL_ICONS[0];
+}
+
 function getBaseActionCost(base, button) {
   if (!base) return null;
   switch (button) {
@@ -2151,7 +2167,10 @@ function getHeroButtonConfigs(hero, player) {
       cost: getHeroActionCost(hero, 2),
     },
     {
-      icons: [iconConfig("spell1_icon", -6), iconConfig("reroll_icon", 6)],
+      icons: [
+        iconConfig(spellIconForSlot(hero, 0), -6),
+        iconConfig("reroll_icon", 6),
+      ],
       cost: getHeroActionCost(hero, 3),
     },
     {
@@ -2163,7 +2182,10 @@ function getHeroButtonConfigs(hero, player) {
       cost: getHeroActionCost(hero, 5),
     },
     {
-      icons: [iconConfig("spell2_icon", -6), iconConfig("reroll_icon", 6)],
+      icons: [
+        iconConfig(spellIconForSlot(hero, 1), -6),
+        iconConfig("reroll_icon", 6),
+      ],
       cost: getHeroActionCost(hero, 6),
     },
   ];
