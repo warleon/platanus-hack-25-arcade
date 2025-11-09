@@ -1038,6 +1038,37 @@ function playTone(scene, frequency, duration) {
   oscillator.stop(audioContext.currentTime + duration);
 }
 
+function playHitSound(scene, baseFreq = 440) {
+  const ctx = scene.sound?.context;
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  const freq = baseFreq * (0.85 + Math.random() * 0.3);
+  const now = ctx.currentTime;
+  osc.frequency.setValueAtTime(freq, now);
+  osc.type = "triangle";
+  gain.gain.setValueAtTime(0.18, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  osc.start(now);
+  osc.stop(now + 0.15);
+}
+
+function flashDamage(entity) {
+  if (!entity?.scene || !entity.setTint) return;
+  entity.setTint(0xff5555);
+  entity.scene.time.delayedCall(120, () => entity.setTint());
+}
+
+function handleDamageFeedback(entity) {
+  if (!entity) return;
+  flashDamage(entity);
+  if (entity.damageTone) {
+    playHitSound(entity.scene, entity.damageTone);
+  }
+}
+
 class Entity extends Phaser.GameObjects.Sprite {
   pathTargets = [];
   attackTargets = [];
@@ -1064,6 +1095,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   attackAnimationPrefix = "";
   attacking = false;
   player = null;
+  damageTone = 0;
 
   constructor(scene, x, y, kind, texture) {
     super(scene, x * config.width, y * config.height, texture);
@@ -1159,6 +1191,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   takeDamage(amount, from) {
+    handleDamageFeedback(this);
     this.health -= amount;
     if (this.health <= 0) {
       this.die(from);
@@ -1611,6 +1644,7 @@ function createHeroUnit(scene, position, type) {
   hero.hitboxRadius = 0.02;
   hero.attackable = true;
   hero.home = { x: hero.x, y: hero.y };
+  hero.damageTone = type === "range" ? 640 : 520;
   return hero;
 }
 
@@ -1688,6 +1722,7 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
     const roundMultiplier = Math.pow(1.2, Math.max(0, round - 1));
     creep.damage = 12 * roundMultiplier;
     creep.health = creep.maxhealth = 90 * roundMultiplier;
+    creep.damageTone = 300;
     creep.attackRadius = 0.08;
     creep.visionRadius = 0.4;
     creep.hitboxRadius = 0.02;
@@ -1741,5 +1776,6 @@ function createBase() {
   base.health = base.maxhealth;
   base.hitboxRadius = 0.08;
   base.attackable = true;
+  base.damageTone = 200;
   return base;
 }
