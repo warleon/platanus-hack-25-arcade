@@ -1088,7 +1088,6 @@ class Entity extends Phaser.GameObjects.Sprite {
   currentTarget = null;
   kind = ""; // path, hero, enemy,  base, ui
   attackRadius = 0.02;
-  xpRadius = 0.1;
   hitboxRadius = 0.01;
   visionRadius = 0.2;
   damage = 1;
@@ -1276,10 +1275,7 @@ class Entity extends Phaser.GameObjects.Sprite {
       );
     }
     if (this.manaRegenPerSec > 0 && this.mana < this.maxmana) {
-      this.mana = Math.min(
-        this.maxmana,
-        this.mana + this.manaRegenPerSec * dt
-      );
+      this.mana = Math.min(this.maxmana, this.mana + this.manaRegenPerSec * dt);
     }
     if (this.kind === KIND.PATH) return;
     if (this.kind === KIND.BASE) {
