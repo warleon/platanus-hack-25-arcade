@@ -1081,6 +1081,47 @@ function handleDamageFeedback(entity) {
   }
 }
 
+function playLevelSound(scene) {
+  const ctx = scene.sound?.context;
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  const now = ctx.currentTime;
+  osc.frequency.setValueAtTime(500, now);
+  osc.frequency.linearRampToValueAtTime(750, now + 0.25);
+  osc.type = "sawtooth";
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+  osc.start(now);
+  osc.stop(now + 0.3);
+}
+
+function applyHeroScaling(hero) {
+  const scale = Math.pow(1.12, hero.level - 1);
+  hero.maxhealth = hero.baseMaxhealth * scale;
+  hero.health = hero.maxhealth;
+  hero.damage = hero.baseDamage * scale;
+  hero.mana = hero.maxmana;
+  hero.attackable = true;
+  hero.setTint(0xffff88);
+  hero.scene.time.delayedCall(250, () => hero.setTint());
+}
+
+function grantHeroXP(hero, amount) {
+  if (!hero || hero.kind !== KIND.HERO) return;
+  hero.xp = (hero.xp || 0) + amount;
+  hero.xpToLevel = hero.xpToLevel || 100;
+  while (hero.xp >= hero.xpToLevel) {
+    hero.xp -= hero.xpToLevel;
+    hero.xpToLevel = Math.floor(hero.xpToLevel * 1.2);
+    hero.level++;
+    applyHeroScaling(hero);
+    playLevelSound(hero.scene);
+  }
+}
+
 class Entity extends Phaser.GameObjects.Sprite {
   pathTargets = [];
   attackTargets = [];
@@ -1091,12 +1132,16 @@ class Entity extends Phaser.GameObjects.Sprite {
   hitboxRadius = 0.01;
   visionRadius = 0.2;
   damage = 1;
+  baseDamage = 1;
   health = 50;
   maxhealth = 50;
+  baseMaxhealth = 50;
   healthRegenPerSec = 0;
   mana = 100;
   maxmana = 100;
   manaRegenPerSec = 0;
+  xp = 0;
+  xpToLevel = 100;
   speed = 40;
   level = 1;
   attackable = true;
@@ -1114,6 +1159,8 @@ class Entity extends Phaser.GameObjects.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this, 0);
     this.kind = kind;
+    this.baseDamage = this.damage;
+    this.baseMaxhealth = this.maxhealth;
   }
   resize(w, h) {
     const width = (config.width * w) / this.body.width;
@@ -1744,6 +1791,10 @@ function createHeroUnit(scene, position, type) {
   hero.home = { x: hero.x, y: hero.y };
   hero.damageTone = type === "range" ? 640 : 520;
   hero.healthRegenPerSec = type === "range" ? 6 : 9;
+  hero.baseDamage = hero.damage;
+  hero.baseMaxhealth = hero.maxhealth;
+  hero.xp = 0;
+  hero.xpToLevel = 100;
   return hero;
 }
 
@@ -1852,6 +1903,17 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
         const idx = hero.targettable.indexOf(creep);
         if (idx >= 0) {
           hero.targettable.splice(idx, 1);
+        }
+      });
+      const deathX = creep.x;
+      const deathY = creep.y;
+      defenders.forEach((hero) => {
+        if (!hero || hero.kind !== KIND.HERO || hero.health <= 0) return;
+        const dist =
+          Phaser.Math.Distance.Between(hero.x, hero.y, deathX, deathY) /
+          config.width;
+        if (dist <= hero.visionRadius) {
+          grantHeroXP(hero, 25);
         }
       });
       neutrals = neutrals.filter((entity) => entity !== creep);
