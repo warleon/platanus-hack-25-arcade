@@ -1119,17 +1119,35 @@ class Entity extends Phaser.GameObjects.Sprite {
     );
   }
 
-  appendTarget(entity) {
+  appendTarget(entity, prioritize = false) {
     if (entity.kind !== KIND.PATH) {
       if (entity.attackable === false) {
         return;
       }
-      this.attackTargets.push(entity);
-      this.currentTarget = this.attackTargets[0];
+      const existingIndex = this.attackTargets.indexOf(entity);
+      if (existingIndex !== -1) {
+        if (prioritize && existingIndex !== 0) {
+          this.attackTargets.splice(existingIndex, 1);
+          this.attackTargets.unshift(entity);
+          this.currentTarget = entity;
+        }
+        return;
+      }
+      if (prioritize) {
+        this.attackTargets.unshift(entity);
+        this.currentTarget = entity;
+      } else {
+        this.attackTargets.push(entity);
+        if (!this.currentTarget || this.currentTarget.kind === KIND.PATH) {
+          this.currentTarget = this.attackTargets[0];
+        }
+      }
       return;
     }
-    this.pathTargets.push(entity);
-    if (!this.currentTarget) {
+    if (!this.pathTargets.includes(entity)) {
+      this.pathTargets.push(entity);
+    }
+    if (!this.currentTarget || this.currentTarget.kind === KIND.PATH) {
       this.currentTarget = this.pathTargets[0];
     }
   }
@@ -1191,7 +1209,7 @@ class Entity extends Phaser.GameObjects.Sprite {
   }
 
   takeDamage(amount, from) {
-    if (this.health <= 0 || !this.scene?.sound?.context) return;
+    if (this.health <= 0) return;
     handleDamageFeedback(this);
     this.health -= amount;
     if (this.health <= 0) {
@@ -1205,10 +1223,39 @@ class Entity extends Phaser.GameObjects.Sprite {
     this.attackable = false;
     if (this.kind === KIND.CREEP) enemiesCount--;
     this.onDeath(this, by);
-    this.destroy();
+    if (this.kind === KIND.HERO) {
+      this.setActive(false);
+      this.setVisible(false);
+      if (this.body) {
+        this.body.enable = false;
+        this.body.setVelocity(0, 0);
+      }
+      const delay =
+        this.healthRegeneration > 0
+          ? ((this.maxhealth * 0.5) / this.healthRegeneration) * 1000
+          : 5000;
+      this.scene.time.delayedCall(delay, () => {
+        if (!this.scene || this.health > 0) return;
+        this.health = this.maxhealth * 0.5;
+        this.attackable = true;
+        this.pathTargets = [];
+        this.attackTargets = [];
+        this.currentTarget = null;
+        this.setPosition(this.home?.x ?? this.x, this.home?.y ?? this.y);
+        this.setActive(true);
+        this.setVisible(true);
+        if (this.body) {
+          this.body.enable = true;
+          this.body.setVelocity(0, 0);
+        }
+      });
+    } else {
+      this.destroy();
+    }
   }
 
   update(_time, delta) {
+    if (!this.active) return;
     if (this.kind === KIND.PATH) return;
     if (this.kind === KIND.BASE) {
       //generate points
@@ -1251,7 +1298,12 @@ class Entity extends Phaser.GameObjects.Sprite {
       if (distance > this.visionRadius) continue;
       switch (this.kind) {
         case KIND.CREEP:
-          if (entity.kind === KIND.HERO || entity.kind === KIND.BASE) {
+          if (entity.kind === KIND.HERO) {
+            this.appendTarget(entity, true);
+          } else if (
+            entity.kind === KIND.BASE &&
+            this.attackTargets.length === 0
+          ) {
             this.appendTarget(entity);
           }
           break;
@@ -1304,9 +1356,22 @@ class Player {
 
   onEntityDeath(killed, killer) {
     if (this.selection === killed) {
-      this.select(killer);
+      let fallback =
+        killer && this.entities.includes(killer) ? killer : null;
+      if (!fallback) {
+        fallback = this.entities.find(
+          (entity) => entity !== killed && entity.health > 0
+        );
+      }
+      if (fallback) {
+        this.select(fallback);
+      } else {
+        this.selection = null;
+      }
     }
-    this.entities = this.entities.filter((e) => e !== killed);
+    if (killed.kind !== KIND.HERO) {
+      this.entities = this.entities.filter((e) => e !== killed);
+    }
   }
 
   linkBase(base) {
@@ -1356,8 +1421,13 @@ class Player {
   }
 
   moveSelectionTo(direction) {
-    if (!this.selection) {
-      this.select(this.base);
+    if (!this.selection || this.selection.health <= 0) {
+      const fallback = this.entities.find((e) => e.health > 0);
+      if (fallback) {
+        this.select(fallback);
+      } else {
+        return;
+      }
     }
     const next = findClosestInDirection(
       this.selection,
@@ -1653,6 +1723,7 @@ function createHeroUnit(scene, position, type) {
   hero.attackable = true;
   hero.home = { x: hero.x, y: hero.y };
   hero.damageTone = type === "range" ? 640 : 520;
+  hero.healthRegeneration = type === "range" ? 6 : 9;
   return hero;
 }
 
