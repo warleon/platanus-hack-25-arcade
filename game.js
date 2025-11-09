@@ -251,7 +251,7 @@ class StartScene extends Phaser.Scene {
     this.startCounts = { P1: 0, P2: 0 };
     this.gameStarted = false;
     placeBackground(this);
-    centeredText(this, config.width / 2, 70, "Arcade Briefing", {
+    centeredText(this, config.width / 2, 70, "Defense of the Castle", {
       fontSize: "36px",
       color: "#ffffff",
       fontStyle: "bold",
@@ -261,7 +261,7 @@ class StartScene extends Phaser.Scene {
       this,
       config.width / 2,
       150,
-      "Press both START buttons once to begin in 2P mode.\nDouble tap the same START button to play solo on that side.\nP1 START = S or Space | P2 START = 5 or 0",
+      "Presiona ambos botones de inicio para jugar de a 2, presiona un solo boton de inicio para jugar solo en ese lado del arcade",
       {
         fontSize: "20px",
         color: "#d0d0d0",
@@ -286,7 +286,7 @@ class StartScene extends Phaser.Scene {
       this,
       config.width / 2,
       config.height - 60,
-      "Waiting for players...",
+      "Esperando por jugadores...",
       {
         fontSize: "22px",
         color: "#ffff00",
@@ -318,8 +318,8 @@ class StartScene extends Phaser.Scene {
 
   createControllerDisplays() {
     this.startButtons = {};
-    this.drawController(200, "PLAYER ONE", "left", "P1");
-    this.drawController(600, "PLAYER TWO", "right", "P2");
+    this.drawController(200, "JUGADOR 1", "left", "P1");
+    this.drawController(600, "JUGADOR 2", "right", "P2");
   }
 
   drawController(x, label, layout, key) {
@@ -356,7 +356,7 @@ class StartScene extends Phaser.Scene {
     const startButton = this.add
       .circle(startX, startY, 24, 0x333333)
       .setStrokeStyle(2, 0xffff00);
-    const startLabel = centeredText(this, startX, startY + 35, "START", {
+    const startLabel = centeredText(this, startX, startY + 35, "INICIO", {
       fontSize: "18px",
       color: "#ffff00",
     });
@@ -426,17 +426,17 @@ class StartScene extends Phaser.Scene {
   updateStatus() {
     const { P1, P2 } = this.startCounts;
     if (P1 && P2) {
-      this.statusText.setText("Both players ready! Starting co-op...");
+      this.statusText.setText("Iniciando en modo 2 jugadores");
     } else if (P1 && !P2) {
       this.statusText.setText(
-        "Player 1 ready. Double tap START for solo or wait for Player 2."
+        "Jugador 1 listo.\nPulsa Inicio de nuevo para empezar solo.\nO espera por un Jugador 2"
       );
     } else if (P2 && !P1) {
       this.statusText.setText(
-        "Player 2 ready. Double tap START for solo or wait for Player 1."
+        "Jugador 2 listo.\nPulsa Inicio de nuevo para empezar solo.\nO espera por un Jugador 1"
       );
     } else {
-      this.statusText.setText("Waiting for players...");
+      this.statusText.setText("Esperando por Jugadores...");
     }
   }
 
@@ -447,12 +447,10 @@ class StartScene extends Phaser.Scene {
     this.gameStarted = true;
     const message =
       data.players === 2
-        ? "Launching 2 player mode!"
-        : `Launching solo mode on ${
-            data.solo === "P1" ? "Player 1" : "Player 2"
-          } controls!`;
+        ? "Iniciando en modo 2 jugadores!"
+        : `Iniciando en modo ${data.solo === "P1" ? "Jugador 1" : "Jugador 2"}`;
     this.statusText.setText(message);
-    this.time.delayedCall(250, () => {
+    this.time.delayedCall(700, () => {
       this.scene.start("MainScene", data);
     });
   }
@@ -475,7 +473,7 @@ class EndScene extends Phaser.Scene {
 
   create() {
     placeBackground(this);
-    centeredText(this, config.width / 2, 80, "Record Your Team", {
+    centeredText(this, config.width / 2, 80, "El castillo fue destruido.", {
       fontSize: "38px",
       color: "#ffffff",
       fontStyle: "bold",
@@ -485,7 +483,7 @@ class EndScene extends Phaser.Scene {
       this,
       config.width / 2,
       140,
-      `Round Reached: ${this.roundAchieved}`,
+      `Sobreviviste hasta la ronda: ${this.roundAchieved}`,
       {
         fontSize: "26px",
         color: "#ffd966",
@@ -496,7 +494,7 @@ class EndScene extends Phaser.Scene {
       this,
       config.width / 2,
       190,
-      "Use your joystick to move the cursor.\nUp/Down change letters, Left/Right move slots.\nPress START to confirm and save.",
+      "Usa el joystick para escribir tu nombre, guerrero.\n⇅ para cambiar de letras, ⇆ para posicionar el cursor.\nPulsa un INICIO para confirmar.",
       {
         fontSize: "20px",
         color: "#d0d0d0",
@@ -505,15 +503,15 @@ class EndScene extends Phaser.Scene {
     );
 
     this.nameEntries = {
-      P1: this.createNameEntry(220, "PLAYER ONE", this.controllers.P1),
-      P2: this.createNameEntry(580, "PLAYER TWO", this.controllers.P2),
+      P1: this.createNameEntry(220, "JUGADOR 1", this.controllers.P1),
+      P2: this.createNameEntry(580, "JUGADOR 2", this.controllers.P2),
     };
 
     this.statusText = centeredText(
       this,
       config.width / 2,
       config.height - 60,
-      "Press START to save.",
+      "Pulsa un INICIO para guardar.",
       {
         fontSize: "22px",
         color: "#80ff80",
@@ -532,7 +530,7 @@ class EndScene extends Phaser.Scene {
       fontSize: "22px",
       color: "#ffffff",
     });
-    centeredText(this, x, 260, enabled ? "Active" : "Not participating", {
+    centeredText(this, x, 260, enabled ? "Activo" : "Inactivo", {
       fontSize: "16px",
       color: enabled ? "#00ffea" : "#888888",
     });
@@ -639,9 +637,11 @@ class EndScene extends Phaser.Scene {
       timestamp: Date.now(),
     };
     recordRun(payload);
-    this.statusText.setText("Score saved! Returning to main menu...");
+    this.statusText.setText(
+      "Ronda registrada, regresando al menu principal..."
+    );
     ctrlMode = { P1: true, P2: true };
-    this.time.delayedCall(400, () => {
+    this.time.delayedCall(700, () => {
       this.scene.start("StartScene");
     });
   }
@@ -652,7 +652,7 @@ class EndScene extends Phaser.Scene {
       return null;
     }
     const name = entry.letters.join("").trim();
-    return name || (key === "P1" ? "Player 1" : "Player 2");
+    return name || (key === "P1" ? "Jugador 1" : "Jugador 2");
   }
 }
 
@@ -723,9 +723,9 @@ class MainScene extends Phaser.Scene {
     this.pauseSelection = 0;
     this.pauseOptionTexts = [];
     this.pauseOptionLabels = [
-      "Resume Game",
-      "Main Menu (no record)",
-      "Finish Run (record names)",
+      "Continuar",
+      "Menu principal\n(abandonar partida)",
+      "Terminar partida\n(y grabar nombres)",
     ];
     this.gameEnded = false;
 
@@ -912,8 +912,8 @@ class MainScene extends Phaser.Scene {
       this,
       config.width / 2,
       config.height / 2 - 70,
-      "Use joystick to move / Press START to choose",
-      { fontSize: "18px", color: "#dddddd" }
+      "Usa el joystick para seleccionar\nPulsa INICIO para confirmar",
+      { fontSize: "18px", color: "#dddddd", align: "center" }
     );
 
     this.pauseOptionTexts = this.pauseOptionLabels.map((label, index) =>
@@ -925,6 +925,7 @@ class MainScene extends Phaser.Scene {
         {
           fontSize: "22px",
           color: "#ffffff",
+          align: "center",
         }
       )
     );
