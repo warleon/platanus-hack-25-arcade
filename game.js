@@ -150,6 +150,7 @@ const HERO = "hero";
 const CREEP = "creep";
 const BASE = "base";
 const UI = "ui";
+const BACKGROUND_TEXTURE_KEY = "arena-bg";
 // Game variables
 let scene;
 let graphics;
@@ -218,6 +219,7 @@ class StartScene extends Phaser.Scene {
     controllerMode = { P1: true, P2: true };
     this.startCounts = { P1: 0, P2: 0 };
     this.gameStarted = false;
+    placeBackground(this);
     this.add
       .text(config.width / 2, 70, "Arcade Briefing", {
         fontSize: "36px",
@@ -283,19 +285,22 @@ class StartScene extends Phaser.Scene {
 
   createControllerDisplays() {
     this.startButtons = {};
-    this.drawController(200, "PLAYER ONE", false, "P1");
-    this.drawController(600, "PLAYER TWO", false, "P2");
+    this.drawController(200, "PLAYER ONE", "left", "P1");
+    this.drawController(600, "PLAYER TWO", "right", "P2");
   }
 
-  drawController(x, label, mirrored, key) {
-    const container = this.add.container(x, 330);
+  drawController(x, label, layout, key) {
+    const container = this.add.container(x, 340);
+    const side = layout === "right" ? "right" : "left";
     const panel = this.add
-      .rectangle(0, 0, 320, 240, 0x060606, 1)
+      .rectangle(0, 10, 320, 240, 0x060606, 1)
       .setStrokeStyle(2, 0xffffff);
     container.add(panel);
 
-    const joystickX = -90;
-    const buttonStartX = 40;
+    const joystickX = side === "right" ? -60 : -90;
+    const buttonStartX = side === "left" ? 10 : 40;
+    const startX = side === "left" ? 120 : -120;
+    const startY = -80;
 
     const stickBase = this.add.circle(joystickX, 40, 45, 0x1a1a1a);
     const stick = this.add.rectangle(joystickX, -5, 12, 100, 0x555555);
@@ -306,7 +311,7 @@ class StartScene extends Phaser.Scene {
       for (let col = 0; col < 3; col++) {
         const btn = this.add.circle(
           buttonStartX + col * 45,
-          -30 + row * 45,
+          10 + row * 45,
           18,
           0x0f49bf
         );
@@ -316,17 +321,17 @@ class StartScene extends Phaser.Scene {
     }
 
     const startButton = this.add
-      .circle(0, 85, 24, 0x333333)
+      .circle(startX, startY, 24, 0x333333)
       .setStrokeStyle(2, 0xffff00);
     const startLabel = this.add
-      .text(0, 120, "START", {
+      .text(startX, startY + 35, "START", {
         fontSize: "18px",
         color: "#ffff00",
       })
       .setOrigin(0.5);
 
     const title = this.add
-      .text(0, -120, label, {
+      .text(0, -145, label, {
         fontSize: "22px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -414,7 +419,9 @@ class StartScene extends Phaser.Scene {
     const message =
       data.players === 2
         ? "Launching 2 player mode!"
-        : `Launching solo mode on ${data.solo === "P1" ? "Player 1" : "Player 2"} controls!`;
+        : `Launching solo mode on ${
+            data.solo === "P1" ? "Player 1" : "Player 2"
+          } controls!`;
     this.statusText.setText(message);
     this.time.delayedCall(250, () => {
       this.scene.start("MainScene", data);
@@ -438,6 +445,7 @@ class EndScene extends Phaser.Scene {
   }
 
   create() {
+    placeBackground(this);
     this.add
       .text(config.width / 2, 80, "Record Your Team", {
         fontSize: "38px",
@@ -575,15 +583,12 @@ class EndScene extends Phaser.Scene {
     const current = entry.letters[entry.index];
     const idx = alphabet.indexOf(current);
     const safeIndex = idx === -1 ? 0 : idx;
-    const nextIndex =
-      (safeIndex + delta + alphabet.length) % alphabet.length;
+    const nextIndex = (safeIndex + delta + alphabet.length) % alphabet.length;
     entry.letters[entry.index] = alphabet[nextIndex];
   }
 
   updateNameEntry(entry) {
-    const display = entry.letters
-      .map((ch) => (ch === " " ? "_" : ch))
-      .join("");
+    const display = entry.letters.map((ch) => (ch === " " ? "_" : ch)).join("");
     entry.nameText.setText(display);
     if (!entry.enabled) {
       entry.pointer.setVisible(false);
@@ -683,8 +688,8 @@ class MainScene extends Phaser.Scene {
 
   create() {
     scene = this;
+    placeBackground(this);
     graphics = this.add.graphics();
-    createBackground();
     const base = createBase();
     this.baseEntity = base;
     this.castleWaypoints = createCastleWaypoints(scene);
@@ -704,12 +709,7 @@ class MainScene extends Phaser.Scene {
     createAnimations(scene, "melee_attack", ["up", "left", "down", "right"], 3);
     createAnimations(scene, "melee_walk", ["idle"], 1, 9);
     createAnimations(scene, "range_walk", ["up", "left", "down", "right"], 4);
-    createAnimations(
-      scene,
-      "range_attack",
-      ["up", "left", "down", "right"],
-      3
-    );
+    createAnimations(scene, "range_attack", ["up", "left", "down", "right"], 3);
     createAnimations(scene, "range_walk", ["idle"], 1, 9);
     createAnimations(scene, "goblin_walk", ["up", "left", "down", "right"], 4);
     createAnimations(
@@ -890,15 +890,10 @@ class MainScene extends Phaser.Scene {
 
     this.pauseOptionTexts = this.pauseOptionLabels.map((label, index) => {
       return this.add
-        .text(
-          config.width / 2,
-          config.height / 2 - 10 + index * 60,
-          label,
-          {
-            fontSize: "22px",
-            color: "#ffffff",
-          }
-        )
+        .text(config.width / 2, config.height / 2 - 10 + index * 60, label, {
+          fontSize: "22px",
+          color: "#ffffff",
+        })
         .setOrigin(0.5);
     });
 
@@ -1435,7 +1430,7 @@ class Player {
     let x_offset = cellSide * 2;
     let y_offset = cellSide * 2;
     //BG
-    drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
+    //drawRect(0xff0000, x, y, cellSide * 76, cellSide * 38);
     const isBase = this.selection.kind === BASE;
     // portrait
     drawRect(
@@ -1622,45 +1617,41 @@ function clearDrawn() {
   drawnImages = [];
 }
 
-function createBackground() {
-  // Create a RenderTexture that covers the screen
+function ensureBackgroundTexture(targetScene) {
+  if (targetScene.textures.exists(BACKGROUND_TEXTURE_KEY)) {
+    return;
+  }
   const width = config.width;
   const height = config.height;
-
-  const rt = scene.add.renderTexture(0, 0, width, height).setOrigin(0, 0);
-
-  // Base green fill (the ground)
-  const baseColor = 0x6b9b40; // darker green
+  const rt = targetScene.add.renderTexture(0, 0, width, height).setOrigin(0, 0);
+  const baseColor = 0x6b9b40;
   rt.fill(baseColor, 1);
 
-  // Create a Graphics object to draw grass blades
-  //const graphics = scene.add.graphics();
-
-  // Parameters
-  const grassCount = 5000; // number of grass blades
-  const grassColor = 0x5a8840; // lighter green
+  const tempGraphics = targetScene.add.graphics();
+  const grassCount = 5000;
+  const grassColor = 0x5a8840;
 
   for (let i = 0; i < grassCount; i++) {
-    // Random position
     const x = Phaser.Math.Between(0, width);
     const y = Phaser.Math.Between(0, height);
-
-    // Random blade size
     const h = Phaser.Math.Between(2, 8);
     const w = 1;
-
-    graphics.fillStyle(grassColor, Phaser.Math.FloatBetween(0.4, 1));
-    graphics.fillRect(x, y, w, h);
+    tempGraphics.fillStyle(grassColor, Phaser.Math.FloatBetween(0.4, 1));
+    tempGraphics.fillRect(x, y, w, h);
   }
 
-  // Draw the grass blades onto the render texture
-  rt.draw(graphics);
+  rt.draw(tempGraphics);
+  tempGraphics.destroy();
+  rt.saveTexture(BACKGROUND_TEXTURE_KEY);
+  rt.destroy();
+}
 
-  // Destroy the temporary graphics object
-  //graphics.destroy();
-
-  // Optional: Save it as a texture for reuse
-  //rt.saveTexture("grass-bg");
+function placeBackground(targetScene) {
+  ensureBackgroundTexture(targetScene);
+  return targetScene.add
+    .image(0, 0, BACKGROUND_TEXTURE_KEY)
+    .setOrigin(0, 0)
+    .setDepth(-10);
 }
 
 function clampToArena(vec) {
@@ -1674,7 +1665,8 @@ function createHeroUnit(scene, position, type) {
   const texture = type === "range" ? "range_walk" : "melee_walk";
   const hero = new Entity(scene, position.x, position.y, HERO, texture);
   hero.walkAnimationPrefix = texture;
-  hero.attackAnimationPrefix = type === "range" ? "range_attack" : "melee_attack";
+  hero.attackAnimationPrefix =
+    type === "range" ? "range_attack" : "melee_attack";
   hero.damage = type === "range" ? 40 : 60;
   hero.health = hero.maxhealth = type === "range" ? 80 : 120;
   hero.attackRadius = type === "range" ? 0.25 : 0.08;
