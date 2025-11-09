@@ -672,38 +672,14 @@ class MainScene extends Phaser.Scene {
       frameWidth: 44,
       frameHeight: 44,
     });
-    this.load.image("gold_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("spell1_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("spell2_icon", SPELL_2_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("spell3_icon", SPELL_3_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("heart_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("mana_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("plus_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
-    this.load.image("up_icon", SPELL_1_ICON, {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
+    this.load.image("gold_icon", GOLD_ICON);
+    this.load.image("spell1_icon", SPELL_1_ICON);
+    this.load.image("spell2_icon", SPELL_2_ICON);
+    this.load.image("spell3_icon", SPELL_3_ICON);
+    this.load.image("heart_icon", HEART_ICON);
+    this.load.image("mana_icon", MANA_ICON);
+    this.load.image("plus_icon", PLUS_ICON);
+    this.load.image("up_icon", UP_ICON);
     this.load.spritesheet("melee_walk", MELEE_WALK, {
       frameWidth: 22,
       frameHeight: 26,
@@ -1636,78 +1612,31 @@ class Player {
       isBase ? "castle" : selection.anims.currentFrame?.textureKey,
       isBase ? undefined : selection.anims.currentFrame?.textureFrame
     );
-    // icon 1
-    x_offset += cellSide * 38;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
-    );
-    // icon 2
-    x_offset += cellSide * 12;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
-    );
-    // icon 3
-    x_offset += cellSide * 12;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
-    );
-    // icon 4
-    y_offset += cellSide * 12;
-    x_offset -= cellSide * 24;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
-    );
-    // icon 5
-    x_offset += cellSide * 12;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
-    );
-    // icon 6
-    x_offset += cellSide * 12;
-    drawRect(
-      0x00ff00,
-      x + x_offset,
-      y + y_offset,
-      cellSide * 10,
-      cellSide * 10
+    const buttonConfigs = isBase
+      ? getBaseButtonConfigs(selection)
+      : getHeroButtonConfigs(selection, this);
+    renderActionButtons(
+      buttonConfigs,
+      x + cellSide * 40,
+      y + cellSide * 2,
+      cellSide
     );
     // health/mana bars
-    y_offset += cellSide * 12;
-    x_offset -= cellSide * 24;
-    drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
+    const barX = x + cellSide * 40;
+    const barY = y + cellSide * 2 + cellSide * 24;
+    drawRect(0xffff00, barX, barY, cellSide * 34, cellSide * 4);
     drawRect(
       0x00ff00,
-      x + x_offset,
-      y + y_offset,
+      barX,
+      barY,
       cellSide * 34 * (selection.health / selection.maxhealth),
       cellSide * 4
     );
-    y_offset += cellSide * 6;
-    drawRect(0xffff00, x + x_offset, y + y_offset, cellSide * 34, cellSide * 4);
+    drawRect(0xffff00, barX, barY + cellSide * 6, cellSide * 34, cellSide * 4);
     drawRect(
       0x0000ff,
-      x + x_offset,
-      y + y_offset,
+      barX,
+      barY + cellSide * 6,
       cellSide * 34 * (selection.mana / selection.maxmana),
       cellSide * 4
     );
@@ -1736,22 +1665,21 @@ function handleBaseButton(player, base, button) {
 }
 
 function handleHeroButton(player, hero, button) {
-  const levelMultiplier = Math.max(hero.level, 1);
   switch (button) {
     case 1:
-      heroUpgradeMaxHealth(hero, levelMultiplier);
+      heroUpgradeMaxHealth(hero);
       break;
     case 2:
-      heroUpgradeMaxMana(hero, levelMultiplier);
+      heroUpgradeMaxMana(hero);
       break;
     case 3:
       rerollHeroSpell(player, hero, 0);
       break;
     case 4:
-      heroUpgradeRegen(hero, levelMultiplier, "health");
+      heroUpgradeRegen(hero, "health");
       break;
     case 5:
-      heroUpgradeRegen(hero, levelMultiplier, "mana");
+      heroUpgradeRegen(hero, "mana");
       break;
     case 6:
       rerollHeroSpell(player, hero, 1);
@@ -1766,10 +1694,9 @@ function upgradeCost(baseCost, levelMultiplier) {
 }
 
 function upgradeBaseSpell(base, index) {
-  const nextLevel = (base.spellLevels[index] || 0) + 1;
-  const cost = BASE_COST.spell[index] * nextLevel;
+  const cost = getBaseActionCost(base, index + 1);
   if (!spendGold(cost)) return;
-  base.spellLevels[index] = nextLevel;
+  base.spellLevels[index] = (base.spellLevels[index] || 0) + 1;
   [player1, player2].forEach((p) => {
     if (!p) return;
     p.heroes.forEach((hero) => ensureHeroSpellSlots(hero, p));
@@ -1777,7 +1704,7 @@ function upgradeBaseSpell(base, index) {
 }
 
 function upgradeBaseGold(base) {
-  const cost = BASE_COST.goldRate * (base.goldUpgradeLevel + 1);
+  const cost = getBaseActionCost(base, 4);
   if (!spendGold(cost)) return;
   base.goldUpgradeLevel++;
   base.goldPerSec += 1;
@@ -1785,7 +1712,7 @@ function upgradeBaseGold(base) {
 }
 
 function upgradeBaseHealth(base) {
-  const cost = BASE_COST.maxHealth * (base.maxHealthLevel + 1);
+  const cost = getBaseActionCost(base, 5);
   if (!spendGold(cost)) return;
   base.maxHealthLevel++;
   base.maxhealth *= 1.15;
@@ -1794,33 +1721,31 @@ function upgradeBaseHealth(base) {
 }
 
 function upgradeBaseRegen(base) {
-  const cost = BASE_COST.regen * (base.regenLevel + 1);
+  const cost = getBaseActionCost(base, 6);
   if (!spendGold(cost)) return;
   base.regenLevel++;
   base.healthRegenPerSec = (base.healthRegenPerSec || 0) + 1;
 }
 
-function heroUpgradeMaxHealth(hero, levelMultiplier) {
-  const cost = upgradeCost(HERO_UPGRADE_COST.health, levelMultiplier);
+function heroUpgradeMaxHealth(hero) {
+  const cost = getHeroActionCost(hero, 1);
   if (!spendGold(cost)) return;
   hero.baseMaxhealth *= 1.15;
   hero.maxhealth = hero.baseMaxhealth;
   hero.health = hero.maxhealth;
 }
 
-function heroUpgradeMaxMana(hero, levelMultiplier) {
-  const cost = upgradeCost(HERO_UPGRADE_COST.mana, levelMultiplier);
+function heroUpgradeMaxMana(hero) {
+  const cost = getHeroActionCost(hero, 2);
   if (!spendGold(cost)) return;
   hero.baseMaxmana = (hero.baseMaxmana || hero.maxmana || 100) * 1.15;
   hero.maxmana = hero.baseMaxmana;
   hero.mana = hero.maxmana;
 }
 
-function heroUpgradeRegen(hero, levelMultiplier, type) {
+function heroUpgradeRegen(hero, type) {
   const cost =
-    type === "health"
-      ? upgradeCost(HERO_UPGRADE_COST.healthRegen, levelMultiplier)
-      : upgradeCost(HERO_UPGRADE_COST.manaRegen, levelMultiplier);
+    type === "health" ? getHeroActionCost(hero, 4) : getHeroActionCost(hero, 5);
   if (!spendGold(cost)) return;
   if (type === "health") {
     hero.healthRegenPerSec += 1;
@@ -1831,7 +1756,7 @@ function heroUpgradeRegen(hero, levelMultiplier, type) {
 
 function rerollHeroSpell(player, hero, slot) {
   if (!player?.base?.spellLevels?.some((lvl) => lvl > 0)) return;
-  const cost = upgradeCost(HERO_UPGRADE_COST.spell, hero.level);
+  const cost = getHeroActionCost(hero, slot === 0 ? 3 : 6);
   if (!spendGold(cost)) return;
   assignHeroSpell(hero, player, slot, true);
 }
@@ -1863,10 +1788,8 @@ function assignHeroSpell(hero, player, slot, forceDifferent = true) {
   const otherSlot = slot === 0 ? hero.spells?.[1] : hero.spells?.[0];
   if (otherSlot?.id !== undefined && forceDifferent !== false) {
     available = available.filter((id) => id !== otherSlot.id);
-    if (!available.length) {
-      available = unlocked.slice();
-    }
   }
+  if (!available.length) return;
   const spellId =
     available[Math.floor(Math.random() * available.length)] ?? unlocked[0];
   hero.spells[slot] = createSpellInstance(spellId);
@@ -2059,6 +1982,180 @@ function drawRect(color, x, y, width, height, sprite, frame) {
     img.setDisplaySize(w, h);
     drawnImages.push(img);
   }
+}
+
+function drawIcon(texture, centerX, centerY, size) {
+  if (!texture) return;
+  const icon = scene.add.image(centerX, centerY, texture);
+  icon.setDisplaySize(size, size);
+  drawnImages.push(icon);
+}
+
+function renderButtonIcons(slotX, slotY, cellSide, icons = []) {
+  if (!icons.length) return;
+  const width = cellSide * 10;
+  const centerX = slotX + width / 2;
+  const centerY = slotY + width / 2;
+  const defaultSize = cellSide * 6;
+  icons.forEach((icon, idx) => {
+    const offsetX =
+      icon.offsetX !== undefined
+        ? icon.offsetX
+        : icons.length === 1
+        ? 0
+        : (idx - (icons.length - 1) / 2) * cellSide * 3;
+    const offsetY = icon.offsetY || 0;
+    drawIcon(
+      icon.texture,
+      centerX + offsetX,
+      centerY + offsetY,
+      icon.size || defaultSize
+    );
+  });
+}
+
+function renderButtonCost(slotX, slotY, cellSide, cost) {
+  if (cost === undefined || cost === null) return;
+  const width = cellSide * 10;
+  const centerX = slotX + width / 2;
+  const label = typeof cost === "string" ? cost : `${Math.round(cost)}g`;
+  const color =
+    typeof cost === "number"
+      ? gold >= cost
+        ? "#ffff88"
+        : "#ff6666"
+      : "#aaaaaa";
+  const text = scene.add
+    .text(centerX, slotY - 6, label, {
+      fontSize: "10px",
+      color,
+      fontFamily: "monospace",
+    })
+    .setOrigin(0.5);
+  drawnImages.push(text);
+}
+
+function renderActionButtons(buttons, startX, startY, cellSide) {
+  const width = cellSide * 10;
+  const height = width;
+  const xSpacing = cellSide * 12;
+  const ySpacing = cellSide * 12;
+  for (let i = 0; i < 6; i++) {
+    const cfg = buttons[i] || {};
+    const row = Math.floor(i / 3);
+    const col = i % 3;
+    const slotX = startX + col * xSpacing;
+    const slotY = startY + row * ySpacing;
+    drawRect(0x00ff00, slotX, slotY, width, height);
+    renderButtonIcons(slotX, slotY, cellSide, cfg.icons || []);
+    renderButtonCost(slotX, slotY, cellSide, cfg.cost);
+  }
+}
+
+function iconConfig(texture, offsetX = 0, offsetY = 0, size) {
+  return { texture, offsetX, offsetY, size };
+}
+
+function getBaseActionCost(base, button) {
+  if (!base) return null;
+  switch (button) {
+    case 1:
+    case 2:
+    case 3:
+      return (
+        BASE_COST.spell[button - 1] *
+        ((base.spellLevels?.[button - 1] || 0) + 1)
+      );
+    case 4:
+      return BASE_COST.goldRate * (base.goldUpgradeLevel + 1);
+    case 5:
+      return BASE_COST.maxHealth * (base.maxHealthLevel + 1);
+    case 6:
+      return BASE_COST.regen * (base.regenLevel + 1);
+    default:
+      return null;
+  }
+}
+
+function getHeroActionCost(hero, button) {
+  if (!hero) return null;
+  const levelMultiplier = Math.max(hero.level, 1);
+  switch (button) {
+    case 1:
+      return upgradeCost(HERO_UPGRADE_COST.health, levelMultiplier);
+    case 2:
+      return upgradeCost(HERO_UPGRADE_COST.mana, levelMultiplier);
+    case 3:
+    case 6:
+      return upgradeCost(HERO_UPGRADE_COST.spell, levelMultiplier);
+    case 4:
+      return upgradeCost(HERO_UPGRADE_COST.healthRegen, levelMultiplier);
+    case 5:
+      return upgradeCost(HERO_UPGRADE_COST.manaRegen, levelMultiplier);
+    default:
+      return null;
+  }
+}
+
+function getBaseButtonConfigs(base) {
+  if (!base) return new Array(6).fill({});
+  return [
+    { icons: [iconConfig("spell1_icon")], cost: getBaseActionCost(base, 1) },
+    { icons: [iconConfig("spell2_icon")], cost: getBaseActionCost(base, 2) },
+    { icons: [iconConfig("spell3_icon")], cost: getBaseActionCost(base, 3) },
+    {
+      icons: [iconConfig("gold_icon", -6), iconConfig("up_icon", 6)],
+      cost: getBaseActionCost(base, 4),
+    },
+    {
+      icons: [iconConfig("heart_icon", -6), iconConfig("up_icon", 6)],
+      cost: getBaseActionCost(base, 5),
+    },
+    {
+      icons: [iconConfig("heart_icon", -6), iconConfig("plus_icon", 6)],
+      cost: getBaseActionCost(base, 6),
+    },
+  ];
+}
+
+function getHeroButtonConfigs(hero, player) {
+  if (!hero) return new Array(6).fill({});
+  const baseCombo = (primary, secondary) => [
+    iconConfig(primary, -6),
+    iconConfig(secondary, 6),
+  ];
+  const configs = [
+    {
+      icons: baseCombo("heart_icon", "up_icon"),
+      cost: getHeroActionCost(hero, 1),
+    },
+    {
+      icons: baseCombo("mana_icon", "up_icon"),
+      cost: getHeroActionCost(hero, 2),
+    },
+    {
+      icons: [iconConfig("spell1_icon", -6), iconConfig("plus_icon", 6)],
+      cost: getHeroActionCost(hero, 3),
+    },
+    {
+      icons: baseCombo("heart_icon", "plus_icon"),
+      cost: getHeroActionCost(hero, 4),
+    },
+    {
+      icons: baseCombo("mana_icon", "plus_icon"),
+      cost: getHeroActionCost(hero, 5),
+    },
+    {
+      icons: [iconConfig("spell2_icon", -6), iconConfig("plus_icon", 6)],
+      cost: getHeroActionCost(hero, 6),
+    },
+  ];
+  const unlocked = getUnlockedSpellIds(player);
+  if (!unlocked.length) {
+    configs[2].cost = "LOCK";
+    configs[5].cost = "LOCK";
+  }
+  return configs;
 }
 
 function createAnimations(scene, prefix, rows, columns, offset = 0) {
