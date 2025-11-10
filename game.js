@@ -192,28 +192,15 @@ const HERO_SPELL_HEAL_BOOST = 10;
 
 const BEST_RUN_KEY = "arcade_best_run";
 const LAST_RUN_KEY = "arcade_last_run";
+const LOCAL_STORAGE = {};
 
 function readStoredRun(key) {
-  try {
-    if (typeof localStorage === "undefined") {
-      return null;
-    }
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch (_e) {
-    return null;
-  }
+  const raw = LOCAL_STORAGE[key];
+  return raw ? JSON.parse(raw) : null;
 }
 
 function writeStoredRun(key, data) {
-  try {
-    if (typeof localStorage === "undefined") {
-      return;
-    }
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (_e) {
-    // ignore storage errors
-  }
+  LOCAL_STORAGE[key] = JSON.stringify(data);
 }
 
 function recordRun(data) {
