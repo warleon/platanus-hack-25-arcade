@@ -281,7 +281,7 @@ class StartScene extends Phaser.Scene {
       this,
       config.width / 2,
       config.height - 40,
-      "Esperando por jugadores...",
+      "Esperando jugadores...",
       {
         fontSize: "22px",
         color: "#ffff00",
@@ -1829,24 +1829,21 @@ function performBaseStrike(base) {
 }
 
 function getBaseStrikeDamage(_base) {
-  const roundBonus = Math.max(0, round - 1) * 4;
-  return BASE_STRIKE_DAMAGE + roundBonus;
+  return BASE_STRIKE_DAMAGE + Math.max(0, round - 1) * 10;
 }
 
 function heroUpgradeMaxHealth(hero) {
   const cost = getHeroActionCost(hero, 1);
   if (!spendGold(cost)) return;
   hero.baseMaxhealth *= 1.15;
-  hero.maxhealth = hero.baseMaxhealth;
-  hero.health = hero.maxhealth;
+  hero.health = hero.maxhealth = hero.baseMaxhealth;
 }
 
 function heroUpgradeMaxMana(hero) {
   const cost = getHeroActionCost(hero, 2);
   if (!spendGold(cost)) return;
   hero.baseMaxmana = (hero.baseMaxmana || hero.maxmana || 100) * 1.15;
-  hero.maxmana = hero.baseMaxmana;
-  hero.mana = hero.maxmana;
+  hero.mana = hero.maxmana = hero.baseMaxmana;
 }
 
 function heroUpgradeRegen(hero, type) {
@@ -1854,9 +1851,10 @@ function heroUpgradeRegen(hero, type) {
     type === "health" ? getHeroActionCost(hero, 4) : getHeroActionCost(hero, 5);
   if (!spendGold(cost)) return;
   if (type === "health") {
-    hero.healthRegenPerSec += 1;
+    hero.healthRegenPerSec +=
+      (hero.baseMaxhealth || hero.maxHealth || 100) / 20;
   } else {
-    hero.manaRegenPerSec += 1;
+    hero.manaRegenPerSec += (hero.baseMaxmana || hero.maxmana || 100) / 20;
   }
 }
 
@@ -2502,9 +2500,9 @@ function spawnEnemyWave(scene, defenders, base, waypoints) {
     );
     creep.walkAnimationPrefix = "goblin_walk";
     creep.attackAnimationPrefix = "goblin_attack";
-    const roundMultiplier = Math.pow(1.2, Math.max(0, round - 1));
-    creep.damage = 12 * roundMultiplier;
-    creep.health = creep.maxhealth = 90 * roundMultiplier;
+    const roundMultiplier = Math.pow(1.1, Math.max(0, round - 1));
+    creep.damage = 15 * roundMultiplier;
+    creep.health = creep.maxhealth = 200 * roundMultiplier;
     creep.damageTone = 300;
     creep.attackRadius = 0.005;
     creep.visionRadius = 0.4;
@@ -2565,15 +2563,12 @@ function resetDefenders(defenders) {
 function createBase() {
   const base = new Entity(scene, 0.5, 0.5, KIND.BASE, "castle");
   base.setScale(3);
-  base.maxhealth = 800;
-  base.health = base.maxhealth;
-  base.baseMaxhealth = base.maxhealth;
+  base.baseMaxhealth = base.health = base.maxhealth = 100;
   base.hitboxRadius = 0.08;
   base.attackable = true;
   base.damageTone = 200;
-  base.goldPerSec = 5;
-  base.baseGoldPerSec = base.goldPerSec;
-  base.healthRegenPerSec = 3;
+  base.baseGoldPerSec = base.goldPerSec = 5;
+  base.healthRegenPerSec = 50;
   base.goldUpgradeLevel = 0;
   base.maxHealthLevel = 0;
   base.regenLevel = 0;
